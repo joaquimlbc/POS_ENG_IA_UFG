@@ -1,0 +1,100 @@
+# Ambiente Virtual Python
+venv/
+env/
+ENV/
+.venv
+
+# Dependências instaladas
+*.egg-info/
+dist/
+build/
+*.egg
+*.whl
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+*.pyo
+
+# Banco de Dados
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Cache de Testes e Pytest
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+*.cover
+
+# IDE e Editores
+.vscode/
+.idea/
+.sublime-project
+.sublime-workspace
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+*.iml
+*.sublime-settings
+
+# Configurações Locais
+.env
+.env.local
+.env.*.local
+config.local.py
+secrets.json
+
+# Streamlit
+.streamlit/cache/
+.streamlit/secrets.toml
+.streamlit/logger.log
+
+# Logs
+*.log
+logs/
+
+# Arquivos Temporários
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+
+# Arquivos do Sistema
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# macOS
+*.dmg
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+# Windows
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Arquivos Gerados
+*.csv
+*.json.bak
+dist/
+build/
