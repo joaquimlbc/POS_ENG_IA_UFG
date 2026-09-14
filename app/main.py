@@ -1,0 +1,115 @@
+"""
+Módulo principal da aplicação FastAPI para REST Countries API.
+
+Este módulo contém a configuração da aplicação FastAPI, incluindo
+definição de schemas, rotas de saúde e configuração de middleware.
+"""
+
+from datetime import datetime, timezone
+from typing import Optional
+
+from fastapi import FastAPI
+from pydantic import BaseModel, Field
+
+
+class HealthCheckResponse(BaseModel):
+    """Schema de resposta para o healthcheck da aplicação.
+
+    Attributes:
+        status: Indicador de status operacional da aplicação.
+        version: Versão da API.
+        timestamp: Timestamp do servidor em formato ISO 8601 UTC.
+    """
+
+    status: str = Field(
+        ...,
+        description="Status operacional da aplicação",
+        example="ok",
+    )
+    version: str = Field(
+        ...,
+        description="Versão da API",
+        example="1.0.0",
+    )
+    timestamp: str = Field(
+        ...,
+        description="Timestamp do servidor em formato ISO 8601 UTC",
+        example="2026-09-14T10:30:00+00:00",
+    )
+
+    class Config:
+        """Configuração do modelo Pydantic."""
+
+        json_schema_extra = {
+            "example": {
+                "status": "ok",
+                "version": "1.0.0",
+                "timestamp": "2026-09-14T10:30:00+00:00",
+            }
+        }
+
+
+app = FastAPI(
+    title="REST Countries API",
+    description="API RESTful para ingestão e consulta de dados de países",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+)
+
+
+@app.get(
+    "/health",
+    response_model=HealthCheckResponse,
+    tags=["Health"],
+    summary="Verificação de saúde da aplicação",
+    description="Retorna o status operacional, versão e timestamp do servidor",
+    status_code=200,
+)
+def health_check() -> HealthCheckResponse:
+    """Verificação de saúde do serviço.
+
+    Retorna informações de status operacional da aplicação,
+    versão e timestamp atual do servidor em formato ISO 8601 UTC.
+    Utilizado por orquestradores como Kubernetes e Docker para
+    validar a disponibilidade da aplicação.
+
+    Returns:
+        HealthCheckResponse: Objeto contendo status, versão e timestamp.
+
+    Example:
+        >>> response = GET /health
+        >>> response.json()
+        {
+            "status": "ok",
+            "version": "1.0.0",
+            "timestamp": "2026-09-14T10:30:00+00:00"
+        }
+    """
+    return HealthCheckResponse(
+        status="ok",
+        version="1.0.0",
+        timestamp=datetime.now(timezone.utc).isoformat(),
+    )
+
+
+@app.get("/", tags=["Root"], summary="Endpoint raiz")
+def root() -> dict[str, str]:
+    """Endpoint raiz da API.
+
+    Returns:
+        dict[str, str]: Mensagem de boas-vindas.
+    """
+    return {"message": "REST Countries API - v1.0.0"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+    )
