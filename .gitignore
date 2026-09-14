@@ -98,3 +98,6 @@ $RECYCLE.BIN/
 *.json.bak
 dist/
 build/
+
+# Outros - Apenas para controle pessoal
+etapas_realizadas.txt 
