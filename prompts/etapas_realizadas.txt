@@ -1,16 +1,16 @@
 **14/09/2026 - Primeios passos:**
 
-Criação manual do diretório do projeto PG_genIA_MVP-01
-Criação da pasta Prompts
-Criação do aqrquivo prompts-mvp-rest-countries.md
-Em chat, execução do prompt para criar arquivo .gitignore com seu conteúdo
-Em chat, solicitação para criar ambiente virtual .venv. "Criar o ambiente virtual no .venv."
-Em chat, pedir para iniciar o git. "O projeto ainda não está versionado, inicie o git desse projeto."
-Em chat, criação do README atraves de prompt.
-Em chat, execução do prompt Endpoint de healthcheck, para criar o main.py, criou junto o _init_.py.
-Solicitei para Claude verificar se já tinha o arquivo requirements.txt e os pacotes pythons necessários. "Verifica se já temos o arquivo requirements criado para termos os pacotes necessários para esse projeto, se não tiver, pode instalar e utilizar o ambiente virtual criado para esses fim."
-Prompt para revisão main.py até o momento.
-Prompt para Mensagem de commit
+1. Criação manual do diretório do projeto PG_genIA_MVP-01
+2. Criação da pasta Prompts
+3. Criação do aqrquivo prompts-mvp-rest-countries.md
+4. Em chat, execução do prompt para criar arquivo .gitignore com seu conteúdo
+5. Em chat, solicitação para criar ambiente virtual .venv. "Criar o ambiente virtual no .venv."
+6. Em chat, pedir para iniciar o git. "O projeto ainda não está versionado, inicie o git desse projeto."
+7. Em chat, criação do README atraves de prompt.
+8. Em chat, execução do prompt Endpoint de healthcheck, para criar o main.py, criou junto o _init_.py.
+9. Solicitei para Claude verificar se já tinha o arquivo requirements.txt e os pacotes pythons necessários. "Verifica se já temos o arquivo requirements criado para termos os pacotes necessários para esse projeto, se não tiver, pode instalar e utilizar o ambiente virtual criado para esses fim."
+10. Prompt para revisão main.py até o momento.
+11. Prompt para Mensagem de commit
 
 Resumo do Trabalho Realizado
 📦 Projeto: PG_genIA_MVP-01
@@ -46,6 +46,8 @@ Versionamento
 
 **15/09/2026 - Reorganização de Estrutura:**
 
+Correção da estrutura de pastas, removendo a duplicidade.
+
 Identificação de problema estrutural:
 - Projeto tinha pasta duplicada: PG_genIA_MVP-01/PG_genIA_MVP-01/
 - .gitignore, README.md, app/, prompts/, requirements.txt estavam dentro da pasta interna
@@ -75,3 +77,9 @@ Status: ✅ REORGANIZADO E SINCRONIZADO
 
 -------------------------------------------------
 
+Geração da Documentação do projeto
+
+1. Criação do PRD com prompt especialista
+2. Quebra do backlog com prompt especialista
+3. Criação da arquiterura do projeto (Mermaid)
+4. Em chat, prompt para realizar o Conventional Commits dos documentos criados.

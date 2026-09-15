@@ -61,3 +61,48 @@ Prompt 5 - Mensagem de commit
 Contexto: Alterações realizadas nos arquivos do projeto.
 Objetivo: Gerar uma mensaghem de commit no padrão Conventional Commits.
 Resposta: Apenas uma linha de commit.
+
+-----------------------
+
+Prompt 6 - Escopo MVP
+
+Contexto: Desenvolvimento de MVP baseado no consumo da REST Countries API, com o objetivo de obter dados de países, normalizar e persistir essas informações em banco de dados e disponibilizar indicadores por meio de um dashboard interativo.
+Objetivo: Gerar documento de escopo com objetivo, requisitos funcionais, não funcionais e fora do escopo, separado em base backend com persistencia de dados e front-end (dashboar).
+Estilo: Profissional, objetivo, técnico mais compreensível, estruturado, sem excesso de texto narrativo, orientada à execução do projeto.
+Tom: Analista de negógio Sr, Product Owner, Arquiteto de software, QA/Quality Assurance.
+Audiencia: Product Manager, Product Owner,Analistas de requisitos, Desenvolvedores, 
+QA/Quality Assurance, Arquitetos de software,
+profissionais que estejam utilizando IA Generativa durante o ciclo de desenvolvimento.
+Resposta: Fornece o conteúdo completo do documento em modelo PRD, e disponibilize no diretório documentacoes dentro da estrutura do projeto.
+
+-----------------------
+
+Prompt 7 - Backlog por releases
+
+Contexto: Você está analisando um projeto de desenvolvimento de software e precisa transformar as informações fornecidas sobre o projeto em um backlog estruturado e priorizado por releases, conforme documento PRD.
+Objetivo: Criar backlog mínimo com identificação dos requisitos (Funcionais, não-funcionais e técnicos) e critérios de aceite.
+Estilo: Checklist Markdown.
+Tom: Analista de negógio Sr, Product Owner, Arquiteto de software, QA/Quality Assurance.
+Audiencia: Product Manager, Product Owner,Analistas de requisitos, Desenvolvedores, 
+QA/Quality Assurance, Arquitetos de software,
+profissionais que estejam utilizando IA Generativa durante o ciclo de desenvolvimento.
+Resposta: Fornece o conteúdo completo do documento de backlog, e disponibilize no diretório documentacoes dentro da estrutura do projeto.
+
+-----------------------
+
+Prompt 8 - Arquitetura Mermaid
+
+Contexto: Você está analisando um projeto de desenvolvimento de software e precisa transformar os requisitos, backlog e informações técnicas fornecidas em uma representação visual da arquitetura do sistema utilizando Mermaid.
+Objetivo: Atue como um Arquiteto de Software Sênior e produza uma proposta de arquitetura técnica para o sistema, contemplanto diagrama Mermaid de componentes e fluxo de dados, integrações.
+Estilo: Arquiteto de Software Sênior.
+Tom: técnico, objetivo, analítico, pragmático,
+orientado à decisão.
+Resposta: gere a arquitetura Mermaid.
+
+-----------------------
+
+Prompt 9 - Conventional Commits
+
+Contexto: Adicionados documentos PRD, Backlog e de arquiterura.
+Objetivo: Sugerir 3 mensagens de commit padrão Conventional Commits.
+Resposta: Apenas 3 linhas de commit.
