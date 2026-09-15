@@ -1,0 +1,77 @@
+**14/09/2026 - Primeios passos:**
+
+Criação manual do diretório do projeto PG_genIA_MVP-01
+Criação da pasta Prompts
+Criação do aqrquivo prompts-mvp-rest-countries.md
+Em chat, execução do prompt para criar arquivo .gitignore com seu conteúdo
+Em chat, solicitação para criar ambiente virtual .venv. "Criar o ambiente virtual no .venv."
+Em chat, pedir para iniciar o git. "O projeto ainda não está versionado, inicie o git desse projeto."
+Em chat, criação do README atraves de prompt.
+Em chat, execução do prompt Endpoint de healthcheck, para criar o main.py, criou junto o _init_.py.
+Solicitei para Claude verificar se já tinha o arquivo requirements.txt e os pacotes pythons necessários. "Verifica se já temos o arquivo requirements criado para termos os pacotes necessários para esse projeto, se não tiver, pode instalar e utilizar o ambiente virtual criado para esses fim."
+Prompt para revisão main.py até o momento.
+Prompt para Mensagem de commit
+
+Resumo do Trabalho Realizado
+📦 Projeto: PG_genIA_MVP-01
+Status: Inicializado e versionado com Git
+
+✅ Entregas Concluídas
+Estrutura Base
+
+✅ .gitignore criado com seções comentadas
+✅ Ambiente virtual .venv configurado
+✅ Git inicializado e configurado
+Backend FastAPI
+
+✅ app/main.py com instância FastAPI
+✅ Rota GET /health com healthcheck
+✅ Schema Pydantic v2 para resposta
+✅ Documentação OpenAPI/Swagger automática
+Dependências
+
+✅ requirements.txt com 28 pacotes
+✅ Todas as dependências instaladas no venv
+✅ FastAPI, SQLAlchemy 2.0, Streamlit configurados
+Documentação
+
+✅ README.md com objetivo, stack, instruções e roadmap
+✅ Seções para pré-requisitos e estrutura do projeto
+Versionamento
+
+✅ 5 commits realizados
+✅ Padrão Conventional Commits adotado
+
+-------------------------------------------------
+
+**15/09/2026 - Reorganização de Estrutura:**
+
+Identificação de problema estrutural:
+- Projeto tinha pasta duplicada: PG_genIA_MVP-01/PG_genIA_MVP-01/
+- .gitignore, README.md, app/, prompts/, requirements.txt estavam dentro da pasta interna
+- Isso causava confusão e desalinhamento com o GitHub
+
+Ação executada:
+✅ Movidos app/, prompts/, .gitignore, README.md, requirements.txt para a raiz
+✅ Deletada pasta PG_genIA_MVP-01 duplicada
+✅ Estrutura agora segue convenção padrão de projetos Python
+✅ Commit realizado: "refactor: reorganizar projeto removendo pasta duplicada"
+
+Estrutura Final Corrigida:
+PG_genIA_MVP-01/ (raiz - onde .git está)
+├── .venv/
+├── .gitignore
+├── README.md
+├── requirements.txt
+├── app/
+│   ├── __init__.py
+│   └── main.py
+├── prompts/
+│   ├── prompts-mvp-rest-countries.md
+│   └── etapas_realizadas.txt
+└── .git/
+
+Status: ✅ REORGANIZADO E SINCRONIZADO
+
+-------------------------------------------------
+
