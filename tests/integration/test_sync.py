@@ -26,14 +26,22 @@ class TestCountrySync:
         """
         countries = []
         regions = ["Africa", "Americas", "Asia", "Europe", "Oceania"]
+        iso2_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        iso3_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
         for i in range(250):
             region = regions[i % 5]
+            iso2 = iso2_chars[i % 26] + iso2_chars[(i // 26) % 26]
+            iso3 = (
+                iso3_chars[i % 26]
+                + iso3_chars[(i // 26) % 26]
+                + iso3_chars[(i // 52) % 26]
+            )
             country = CountryCreate(
                 name_common=f"Country {i}",
                 name_official=f"Official Country {i}",
-                iso_code_2=f"C{i:04d}"[:2].upper(),
-                iso_code_3=f"C{i:04d}"[:3].upper(),
+                iso_code_2=iso2,
+                iso_code_3=iso3,
                 region=region,
                 subregion=f"Subregion {i}",
                 population=1000000 + i * 1000,
@@ -99,14 +107,22 @@ class TestCountrySync:
         """
         countries = []
         regions = ["Africa", "Americas", "Asia", "Europe", "Oceania"]
+        iso2_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        iso3_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
         for i in range(1001):  # Exceeds limit by 1
             region = regions[i % 5]
+            iso2 = iso2_chars[i % 26] + iso2_chars[(i // 26) % 26]
+            iso3 = (
+                iso3_chars[i % 26]
+                + iso3_chars[(i // 26) % 26]
+                + iso3_chars[(i // 52) % 26]
+            )
             country = CountryCreate(
                 name_common=f"Country {i}",
                 name_official=f"Official Country {i}",
-                iso_code_2=f"C{i:04d}"[:2].upper(),
-                iso_code_3=f"C{i:04d}"[:3].upper(),
+                iso_code_2=iso2,
+                iso_code_3=iso3,
                 region=region,
                 population=1000000 + i,
             )
@@ -129,14 +145,22 @@ class TestCountrySync:
         """
         countries = []
         regions = ["Africa", "Americas", "Asia", "Europe", "Oceania"]
+        iso2_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        iso3_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
         for i in range(1000):
             region = regions[i % 5]
+            iso2 = iso2_chars[i % 26] + iso2_chars[(i // 26) % 26]
+            iso3 = (
+                iso3_chars[i % 26]
+                + iso3_chars[(i // 26) % 26]
+                + iso3_chars[(i // 52) % 26]
+            )
             country = CountryCreate(
                 name_common=f"Country {i}",
                 name_official=f"Official Country {i}",
-                iso_code_2=f"C{i:04d}"[:2].upper(),
-                iso_code_3=f"C{i:04d}"[:3].upper(),
+                iso_code_2=iso2,
+                iso_code_3=iso3,
                 region=region,
                 population=1000000 + i,
             )
@@ -172,8 +196,8 @@ class TestCountrySync:
         country1 = CountryCreate(
             name_common="Country 1",
             name_official="Official 1",
-            iso_code_2="C1",
-            iso_code_3="C01",
+            iso_code_2="AA",
+            iso_code_3="AAA",
             region="Africa",
             population=1000000,
         )
@@ -181,8 +205,8 @@ class TestCountrySync:
         country2 = CountryCreate(
             name_common="Country 2",
             name_official="Official 2",
-            iso_code_2="C2",
-            iso_code_3="C02",
+            iso_code_2="AB",
+            iso_code_3="AAB",
             region="Americas",
             population=2000000,
         )

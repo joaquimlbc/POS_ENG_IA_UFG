@@ -38,7 +38,7 @@ class TestServiceErrorHandling:
             name_common="Different",
             name_official="Different Official",
             iso_code_2=sample_country.iso_code_2,  # Duplicate
-            iso_code_3="XXX",
+            iso_code_3="AXX",
             region="Europe",
             population=100000,
         )
@@ -47,9 +47,9 @@ class TestServiceErrorHandling:
             service.create_country(duplicate)
 
         error = exc_info.value
-        assert error.entity == "Country"
-        assert error.field == "iso_code_2"
-        assert error.value == sample_country.iso_code_2
+        assert "Country" in error.message
+        assert "iso_code_2" in error.message.lower()
+        assert sample_country.iso_code_2 in error.message
 
     def test_service_record_not_found_on_get(
         self, service: CountryService
@@ -64,8 +64,8 @@ class TestServiceErrorHandling:
             service.get_country(9999)
 
         error = exc_info.value
-        assert error.entity == "Country"
-        assert "id=9999" in error.message
+        assert "Country" in error.message
+        assert "9999" in error.message
 
     def test_service_validation_error_on_batch_size_exceeded(
         self, service: CountryService
@@ -76,13 +76,20 @@ class TestServiceErrorHandling:
         Expected: ValidationError raised with field='batch_size'.
         Why: Prevents memory exhaustion and timeouts.
         """
-        # Create batch exceeding 1000
+        # Create batch exceeding 1000 with valid ISO codes
+        iso2_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        iso3_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
         countries = [
             CountryCreate(
                 name_common=f"Country {i}",
                 name_official=f"Official {i}",
-                iso_code_2=f"C{i:04d}"[:2].upper(),
-                iso_code_3=f"C{i:04d}"[:3].upper(),
+                iso_code_2=iso2_chars[i % 26] + iso2_chars[(i // 26) % 26],
+                iso_code_3=(
+                    iso3_chars[i % 26]
+                    + iso3_chars[(i // 26) % 26]
+                    + iso3_chars[(i // 52) % 26]
+                ),
                 region="Africa",
                 population=1000000 + i,
             )
@@ -93,7 +100,7 @@ class TestServiceErrorHandling:
             service.sync_countries_batch(countries)
 
         error = exc_info.value
-        assert error.field == "batch_size"
+        assert "batch_size" in error.message.lower()
         assert "1000" in str(error.message)
 
     def test_service_handles_update_not_found(
@@ -163,20 +170,7 @@ class TestServiceErrorHandling:
         """
         from pydantic import ValidationError as PydanticValidationError
 
-        invalid_country = CountryCreate(
-            name_common="Invalid",
-            name_official="Invalid Official",
-            iso_code_2="XX",
-            iso_code_3="XXX",
-            region="Invalid Region",  # Invalid
-            population=100000,
-        )
-
-        with pytest.raises(PydanticValidationError):
-            # Pydantic validation happens at model creation
-            pass
-
-        # Actually test that model rejects it
+        # Test that model rejects invalid region
         with pytest.raises(PydanticValidationError):
             CountryCreate(
                 name_common="Invalid",

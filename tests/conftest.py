@@ -8,7 +8,8 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.database.connection import Base
+from app.database.models import Base
+from app.database.connection import get_db_session
 from app.models.task import CountryCreate
 from app.service.country_service import CountryService
 
@@ -105,11 +106,20 @@ def service_with_250_countries(service: CountryService) -> CountryService:
     """Create service with 250 test countries for pagination testing."""
     countries = []
     regions = ["Africa", "Americas", "Asia", "Europe", "Oceania"]
+    # ISO codes must be alphabetic only
+    iso2_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    iso3_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
     for i in range(250):
         region = regions[i % 5]
-        iso2 = f"{i:04d}"[:2].upper()
-        iso3 = f"{i:04d}"[:3].upper()
+        # Generate valid ISO2 codes (2 letters)
+        iso2 = iso2_chars[i % 26] + iso2_chars[(i // 26) % 26]
+        # Generate valid ISO3 codes (3 letters)
+        iso3 = (
+            iso3_chars[i % 26]
+            + iso3_chars[(i // 26) % 26]
+            + iso3_chars[(i // 52) % 26]
+        )
 
         country = CountryCreate(
             name_common=f"Country {i}",

@@ -134,15 +134,11 @@ class TestCountryCRUD:
         from app.models.task import CountryUpdate
         from pydantic import ValidationError
 
-        invalid_update = CountryUpdate(region="Invalid Region")
-
         with pytest.raises(ValidationError) as exc_info:
-            CountryUpdate.model_validate(
-                {"region": "Invalid Region"}, from_attributes=True
-            )
+            CountryUpdate(region="Invalid Region")
 
         error_dict = exc_info.value.errors()[0]
-        assert "Region" in error_dict["msg"] or "region" in error_dict["loc"]
+        assert "region" in str(error_dict["loc"]).lower()
 
     def test_update_population_range_validation(
         self, service_with_sample_country: CountryService
