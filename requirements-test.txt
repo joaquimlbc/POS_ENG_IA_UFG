@@ -1,0 +1,17 @@
+# Testing dependencies for REST Countries API
+
+# Base requirements (should also have main requirements.txt installed)
+-r requirements.txt
+
+# Pytest and plugins
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-asyncio==0.21.1
+
+# Mocking and fixtures
+pytest-xdist==3.5.0
+faker==20.1.0
+
+# Code quality for tests
+coverage==7.3.2
