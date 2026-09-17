@@ -82,6 +82,60 @@ class CountryService:
         self.stats_repo = StatisticsRepository(session)
         self.priority_advisor = PriorityAdvisor()
 
+    def _ensure_country_exists(self, country_id: int) -> Country:
+        """Internal: Ensure country exists or raise RecordNotFoundError.
+
+        Args:
+            country_id: Country ID to check
+
+        Returns:
+            Country instance
+
+        Raises:
+            RecordNotFoundError: If country not found
+        """
+        country = self.country_repo.get_by_id(country_id)
+        if not country:
+            raise RecordNotFoundError("Country", f"id={country_id}")
+        return country
+
+    def _add_related_entities(
+        self,
+        country_id: int,
+        entity_class: type,
+        items_data: List,
+        entity_type: str,
+    ) -> CountryDetailResponse:
+        """Internal: Generic related entity adder (DRY pattern).
+
+        Args:
+            country_id: Country ID
+            entity_class: ORM class (Language, Currency, Timezone)
+            items_data: List of schema objects to add
+            entity_type: Name for logging (languages, currencies, timezones)
+
+        Returns:
+            Updated country with new relationships
+
+        Raises:
+            RecordNotFoundError: If country not found
+        """
+        country = self._ensure_country_exists(country_id)
+
+        for item_data in items_data:
+            entity = entity_class(
+                country_id=country_id,
+                **item_data.model_dump(),
+            )
+            self.session.add(entity)
+
+        self.session.commit()
+        self.session.refresh(country)
+
+        logger.info(f"Added {len(items_data)} {entity_type} to {country.name_common}")
+
+        return CountryDetailResponse.model_validate(country)
+
     def create_country(self, country_data: CountryCreate) -> CountryResponse:
         """Create a new country with business rule validation.
 
@@ -139,10 +193,7 @@ class CountryService:
         Raises:
             RecordNotFoundError: If country not found
         """
-        country = self.country_repo.get_by_id(country_id)
-        if not country:
-            raise RecordNotFoundError("Country", f"id={country_id}")
-
+        country = self._ensure_country_exists(country_id)
         return CountryDetailResponse.model_validate(country)
 
     def get_country_by_iso(self, iso_code: str) -> CountryDetailResponse:
@@ -224,15 +275,9 @@ class CountryService:
         Raises:
             RecordNotFoundError: If country not found
         """
-        country = self.country_repo.get_by_id(country_id)
-        if not country:
-            raise RecordNotFoundError("Country", f"id={country_id}")
+        country = self._ensure_country_exists(country_id)
 
-        # Log the update
-        logger.info(
-            f"Updating country: {country.name_common} "
-            f"(id={country_id})"
-        )
+        logger.info(f"Updating country: {country.name_common} (id={country_id})")
 
         updated = self.country_repo.update(country_id, update_data)
         return CountryResponse.model_validate(updated)
@@ -466,26 +511,9 @@ class CountryService:
         Raises:
             RecordNotFoundError: If country not found
         """
-        country = self.country_repo.get_by_id(country_id)
-        if not country:
-            raise RecordNotFoundError("Country", f"id={country_id}")
-
-        for lang_data in languages:
-            language = Language(
-                country_id=country_id,
-                **lang_data.model_dump(),
-            )
-            self.session.add(language)
-
-        self.session.commit()
-        self.session.refresh(country)
-
-        logger.info(
-            f"Added {len(languages)} languages to "
-            f"{country.name_common}"
+        return self._add_related_entities(
+            country_id, Language, languages, "languages"
         )
-
-        return CountryDetailResponse.model_validate(country)
 
     def add_currencies(
         self, country_id: int, currencies: List[CurrencyCreate]
@@ -502,26 +530,9 @@ class CountryService:
         Raises:
             RecordNotFoundError: If country not found
         """
-        country = self.country_repo.get_by_id(country_id)
-        if not country:
-            raise RecordNotFoundError("Country", f"id={country_id}")
-
-        for curr_data in currencies:
-            currency = Currency(
-                country_id=country_id,
-                **curr_data.model_dump(),
-            )
-            self.session.add(currency)
-
-        self.session.commit()
-        self.session.refresh(country)
-
-        logger.info(
-            f"Added {len(currencies)} currencies to "
-            f"{country.name_common}"
+        return self._add_related_entities(
+            country_id, Currency, currencies, "currencies"
         )
-
-        return CountryDetailResponse.model_validate(country)
 
     def add_timezones(
         self, country_id: int, timezones: List[TimezoneCreate]
@@ -538,26 +549,9 @@ class CountryService:
         Raises:
             RecordNotFoundError: If country not found
         """
-        country = self.country_repo.get_by_id(country_id)
-        if not country:
-            raise RecordNotFoundError("Country", f"id={country_id}")
-
-        for tz_data in timezones:
-            timezone = Timezone(
-                country_id=country_id,
-                **tz_data.model_dump(),
-            )
-            self.session.add(timezone)
-
-        self.session.commit()
-        self.session.refresh(country)
-
-        logger.info(
-            f"Added {len(timezones)} timezones to "
-            f"{country.name_common}"
+        return self._add_related_entities(
+            country_id, Timezone, timezones, "timezones"
         )
-
-        return CountryDetailResponse.model_validate(country)
 
     def validate_country_integrity(self, country_id: int) -> dict:
         """Validate data integrity and quality of a country.
@@ -577,9 +571,7 @@ class CountryService:
         Raises:
             RecordNotFoundError: If country not found
         """
-        country = self.country_repo.get_by_id(country_id)
-        if not country:
-            raise RecordNotFoundError("Country", f"id={country_id}")
+        country = self._ensure_country_exists(country_id)
 
         quality_score = self.priority_advisor.assess_quality(country)
 
