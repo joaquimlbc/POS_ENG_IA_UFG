@@ -2,7 +2,7 @@
 Módulo principal da aplicação FastAPI para REST Countries API.
 
 Este módulo contém a configuração da aplicação FastAPI, incluindo
-definição de schemas, rotas de saúde e configuração de middleware.
+definição de schemas, rotas de saúde, middleware e integração de todas as rotas.
 """
 
 from datetime import datetime, timezone
@@ -10,6 +10,8 @@ from typing import Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
+
+from app.api.country_routes import router as country_router
 
 
 class HealthCheckResponse(BaseModel):
@@ -57,6 +59,9 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
 )
+
+# Incluir rotas de país
+app.include_router(country_router)
 
 
 @app.get(
