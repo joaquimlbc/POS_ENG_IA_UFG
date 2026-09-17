@@ -104,8 +104,15 @@ DURAÇÃO: 2 dias (~4 horas de trabalho dedicado)
 
 **16/09/2026 - Implementação da Arquitetura em Camadas:**
 
-SESSÃO: Desenvolvimento Backend Completo - Validação, Persistência, Serviço e API
+1. Criação do Modelo Pydantic via prompt.
+2. Criação da camada de persistencia via prompt.
+3. Criação do service com regras de prioridade via prompt.
+4. Criação das Rotas da API de Tasks via prompt.
+5. Revisão técnica via prompt.
+6. Commit via prompt.
 
+
+SESSÃO: Desenvolvimento Backend Completo - Validação, Persistência, Serviço e API
 Status Inicial: Projeto documentado, pronto para desenvolvimento backend
 Status Final: Backend funcional com 4 camadas implementadas, testado e commitado
 

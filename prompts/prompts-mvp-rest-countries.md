@@ -106,3 +106,82 @@ Prompt 9 - Conventional Commits
 Contexto: Adicionados documentos PRD, Backlog e de arquiterura.
 Objetivo: Sugerir 3 mensagens de commit padrão Conventional Commits.
 Resposta: Apenas 3 linhas de commit.
+
+-----------------------
+
+Prompt 11 - Modelo Pydantic
+
+Contexto: Você está analisando o projeto de desenvolvimento de software e precisa transformar os requisitos funcionais, regras de negócio, backlog e arquitetura fornecidos em modelos de dados utilizando Pydantic.
+Objetivo: Atue como um Desenvolvedor Python Sênior e Arquiteto de Software, responsável por criar os modelos Pydantic necessários para o projeto.
+Estilo: Utilizando boas práticas modernas de desenvolvimento em Pydantic v2, código limpo e docstrings curtas.
+Tom: Utilize um tom técnico, objetivo, pragmático, didático e orientado à implementação.
+Audiencia: O resultado será utilizado principalmente por: Desenvolvedores Python,
+Backend Developers, Tech Leads, Arquitetos,
+QA, Desenvolvedores de APIs, Product Owners em atividades de validação de contrato.
+Resposta: Apenas código, criar o arquivo task.py, na estrutura de pastas app/models.
+
+-----------------------
+
+Prompt 12 - Camada de Persistência
+
+Contexto: Estou desenvolvendo uma aplicação em Python 3.11+ que consome dados da REST Countries API, valida e normaliza essas informações e disponibiliza posteriormente os dados em um dashboard.
+Objetivo: Crie a camada completa de persistência do projeto.
+Estilo: Atue como um engenheiro de software backend sênior especializado em Python, SQLAlchemy e arquitetura de sistemas.
+Tom: Utilize um tom técnico, objetivo, pragmático, orientado à implementação e crítico em relação a decisões de arquitetura..
+Audiencia: Desenvolvedores Python,
+Backend Developers, Arquitetos,
+QA, profissionais utilizando IA Generativa no desenvolvimento de software.
+Resposta: Organize a resposta nas seguintes etapas: 
+- Análise da Persistência
+- Modelo de Dados
+- Estrutura de Diretórios
+- Configuração do Banco
+- Modelos SQLAlchemy
+- Schemas Pydantic
+- Repository
+- Persistência em Lote
+- Tratamento de erros
+Evitar duplicidades na estrutura do projeto.
+
+-----------------------
+
+Prompt 13 - Service com regra de prioridade
+
+Contexto: Estou desenvolvendo uma aplicação em Python 3.11+ que consome dados da REST Countries API, quero separar corretamente as responsabilidades entre as camadas de API, serviço, persistência e regras de negócio.
+Objetivo: Criar taskService que use TaskRepository e PriorityAdvisor.
+Estilo: Atue como um engenheiro de software backend sênior, com experiência Python, FastAPI, Arquitetura em camadas.
+Tom: Utilize um tom técnico, objetivo, pragmático, orientado à implementação e crítico em relação a decisões de arquitetura.
+Audiencia: Desenvolvedores Python,
+Backend Developers, Arquitetos,
+QA, profissionais utilizando IA Generativa no desenvolvimento de software.
+Resposta: Criar o arquivo task_service.py com conteúdo das regras de prioridades de camadas, no repositório app/service/.
+
+-----------------------
+
+Prompt 14 - Criação das Rotas da API de Tasks
+
+Contexto: Estou desenvolvendo uma aplicação em Python 3.11+ que consome dados da REST Countries API, quero criação das Rotas da API de Tasks.
+Objetivo: Crie as rotas REST da API de Tasks, utilizando FastAPI.
+Estilo: Atue como um desenvolvedor de software backend sênior, com experiência em APIs REST e FastAPI.
+Tom: Utilize um tom técnico, objetivo, pragmático, orientado às boas práticas de API REST. Não deve complicar a implemtação.
+Audiencia: Backend Developers, Arquitetos,
+QA, profissionais utilizando IA Generativa no desenvolvimento de software.
+Resposta: Criar apenas o código do arquivo task_routes.py no diretório App/API.
+
+-----------------------
+
+Prompt 15 - Revisão técnica
+
+Revise os arquivos do core da API e responda:
+1. Quais pontos de acoplamento estão altos?
+2. Onde faltam validações:
+3. Quais 5 testes devo priorizar nas próximas releases?
+Resposta em checklist.
+
+-----------------------
+
+Prompt 16 - Conventional Commits
+
+Contexto: Adicionados vários cógidos, pastas e alterações nos arquivos do projeto e deve realizar o commit no Github.
+Objetivo: Sugerir 3 mensagens de commit padrão Conventional Commits.
+Resposta: Apenas 3 linhas de commit.
