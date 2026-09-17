@@ -310,10 +310,18 @@ class CountryService:
             limit = 100
             logger.warning("Limit exceeded max (100), capped to 100")
 
-        return self.country_repo.get_paginated(
+        result = self.country_repo.get_paginated(
             page=page,
             limit=limit,
             region=region,
+        )
+
+        return CountryListResponse(
+            items=[self._to_response(c) for c in result["countries"]],
+            total=result["total"],
+            page=result["page"],
+            limit=result["limit"],
+            pages=result["pages"],
         )
 
     def update_country(

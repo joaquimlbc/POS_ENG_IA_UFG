@@ -13,9 +13,6 @@ from sqlalchemy.orm import Session
 from app.database.models import Country, Currency, Language, Timezone
 from app.models.task import (
     CountryCreate,
-    CountryDetailResponse,
-    CountryListResponse,
-    CountryResponse,
     CountryUpdate,
     CurrencyCreate,
     LanguageCreate,
@@ -174,8 +171,8 @@ class CountryRepository:
 
     def get_paginated(
         self, page: int = 1, limit: int = 20, region: Optional[str] = None
-    ) -> CountryListResponse:
-        """Get paginated list of countries.
+    ) -> dict:
+        """Get paginated list of countries (raw data, no Pydantic conversion).
 
         Args:
             page: Page number (1-indexed)
@@ -183,9 +180,9 @@ class CountryRepository:
             region: Optional region filter
 
         Returns:
-            CountryListResponse with pagination metadata
+            Dictionary with raw country data and pagination metadata
         """
-        query = self.session.query(Country)
+        query = self._base_query()
 
         if region:
             query = query.filter(Country.region == region)
@@ -195,13 +192,13 @@ class CountryRepository:
 
         countries = query.order_by(Country.name_common).limit(limit).offset(offset).all()
 
-        return CountryListResponse(
-            items=[CountryResponse.model_validate(c) for c in countries],
-            total=total,
-            page=page,
-            limit=limit,
-            pages=(total + limit - 1) // limit,
-        )
+        return {
+            "countries": countries,
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "pages": (total + limit - 1) // limit,
+        }
 
     def update(self, country_id: int, country_data: CountryUpdate) -> Country:
         """Update an existing country.
