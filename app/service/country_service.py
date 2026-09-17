@@ -87,7 +87,7 @@ class CountryService:
 
         Business rules:
         - Name must be unique
-        - ISO codes must be unique and properly formatted
+        - ISO codes (both iso2 and iso3) must be unique and properly formatted
         - Region must be valid
         - Population and area must be non-negative
 
@@ -103,13 +103,22 @@ class CountryService:
         """
         logger.info(f"Creating country: {country_data.name_common}")
 
-        # Business rule: Check if country already exists
+        # Business rule: Check ISO2 uniqueness
         existing = self.country_repo.get_by_iso2(country_data.iso_code_2)
         if existing:
             raise DuplicateRecordError(
                 "Country",
                 "iso_code_2",
                 country_data.iso_code_2,
+            )
+
+        # Business rule: Check ISO3 uniqueness
+        existing_iso3 = self.country_repo.get_by_iso3(country_data.iso_code_3)
+        if existing_iso3:
+            raise DuplicateRecordError(
+                "Country",
+                "iso_code_3",
+                country_data.iso_code_3,
             )
 
         # Create country
@@ -256,21 +265,30 @@ class CountryService:
         """Synchronize batch of countries with quality assessment.
 
         Business logic:
+        - Validate batch size (max 1000 records)
         - Upsert (insert new, update existing)
         - Assess data quality of batch
         - Prioritize updates based on quality
         - Detailed error tracking
 
         Args:
-            countries_data: List of countries to sync
+            countries_data: List of countries to sync (max 1000 per batch)
             validate_quality: If True, assess quality and skip low-quality data
 
         Returns:
             Sync operation result with statistics
 
         Raises:
+            ValidationError: If batch size exceeds 1000
             BatchProcessError: If sync partially fails
         """
+        # Validate batch size limit
+        if len(countries_data) > 1000:
+            raise ValidationError(
+                "batch_size",
+                f"Batch size {len(countries_data)} exceeds maximum of 1000"
+            )
+
         sync_id = f"sync_{datetime.now(timezone.utc).timestamp()}"
         started_at = datetime.now(timezone.utc)
 

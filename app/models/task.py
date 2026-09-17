@@ -93,7 +93,7 @@ class CountryBase(BaseModel):
     iso_code_3: str = Field(..., min_length=3, max_length=3)
     region: str = Field(..., min_length=1, max_length=50)
     subregion: Optional[str] = Field(None, max_length=50)
-    population: int = Field(..., ge=0)
+    population: int = Field(..., ge=0, le=2000000000)
     area: Optional[float] = Field(None, ge=0)
     latitude: Optional[float] = Field(None, ge=-90, le=90)
     longitude: Optional[float] = Field(None, ge=-180, le=180)
@@ -131,12 +131,23 @@ class CountryUpdate(BaseModel):
     name_official: Optional[str] = Field(None, min_length=1, max_length=255)
     region: Optional[str] = Field(None, min_length=1, max_length=50)
     subregion: Optional[str] = Field(None, max_length=50)
-    population: Optional[int] = Field(None, ge=0)
+    population: Optional[int] = Field(None, ge=0, le=2000000000)
     area: Optional[float] = Field(None, ge=0)
     latitude: Optional[float] = Field(None, ge=-90, le=90)
     longitude: Optional[float] = Field(None, ge=-180, le=180)
 
     model_config = ConfigDict(str_strip_whitespace=True)
+
+    @field_validator("region")
+    @classmethod
+    def validate_region(cls, v: str) -> str:
+        """Validate region is one of the known regions."""
+        if v is None:
+            return v
+        valid_regions = {"Africa", "Americas", "Asia", "Europe", "Oceania"}
+        if v not in valid_regions:
+            raise ValueError(f"Region must be one of {valid_regions}")
+        return v
 
 
 class CountryResponse(CountryBase):
