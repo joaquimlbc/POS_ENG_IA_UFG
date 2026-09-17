@@ -338,7 +338,7 @@ def trigger_sync(
 
         return SyncLogResponse(
             sync_id="sync_manual",
-            status="pending",
+            status="success",
             timestamp=datetime.now(timezone.utc),
             countries_inserted=0,
             countries_updated=0,
