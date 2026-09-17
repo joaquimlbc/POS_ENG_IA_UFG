@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import FastAPI
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.country_routes import router as country_router
 
@@ -26,29 +26,25 @@ class HealthCheckResponse(BaseModel):
     status: str = Field(
         ...,
         description="Status operacional da aplicação",
-        example="ok",
     )
     version: str = Field(
         ...,
         description="Versão da API",
-        example="1.0.0",
     )
     timestamp: str = Field(
         ...,
         description="Timestamp do servidor em formato ISO 8601 UTC",
-        example="2026-09-14T10:30:00+00:00",
     )
 
-    class Config:
-        """Configuração do modelo Pydantic."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "status": "ok",
                 "version": "1.0.0",
                 "timestamp": "2026-09-14T10:30:00+00:00",
             }
         }
+    )
 
 
 app = FastAPI(
