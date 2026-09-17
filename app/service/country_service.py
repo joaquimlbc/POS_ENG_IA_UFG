@@ -99,6 +99,28 @@ class CountryService:
             raise RecordNotFoundError("Country", f"id={country_id}")
         return country
 
+    def _to_response(self, country: Country) -> CountryResponse:
+        """Internal: Convert Country ORM to response (SRP).
+
+        Args:
+            country: Country ORM instance
+
+        Returns:
+            Country response schema
+        """
+        return CountryResponse.model_validate(country)
+
+    def _to_detail_response(self, country: Country) -> CountryDetailResponse:
+        """Internal: Convert Country ORM to detail response (SRP).
+
+        Args:
+            country: Country ORM instance
+
+        Returns:
+            Country detail response with relationships
+        """
+        return CountryDetailResponse.model_validate(country)
+
     def _add_related_entities(
         self,
         country_id: int,
@@ -134,7 +156,48 @@ class CountryService:
 
         logger.info(f"Added {len(items_data)} {entity_type} to {country.name_common}")
 
-        return CountryDetailResponse.model_validate(country)
+        return self._to_detail_response(country)
+
+    def _create_sync_result(
+        self,
+        sync_id: str,
+        status: str,
+        total: int,
+        inserted: int,
+        updated: int,
+        failed: int,
+        message: str,
+        started_at: datetime,
+        quality_summary: Optional[dict] = None,
+    ) -> CountrySyncResult:
+        """Internal: Create sync result (DRY pattern).
+
+        Args:
+            sync_id: Unique sync operation ID
+            status: Operation status (success, partial_failure, failure)
+            total: Total processed records
+            inserted: Records inserted
+            updated: Records updated
+            failed: Records failed
+            message: Status message
+            started_at: Operation start time
+            quality_summary: Quality assessment (optional)
+
+        Returns:
+            Sync result object
+        """
+        return CountrySyncResult(
+            sync_id=sync_id,
+            total_processed=total,
+            inserted=inserted,
+            updated=updated,
+            failed=failed,
+            quality_summary=quality_summary or {},
+            status=status,
+            message=message,
+            started_at=started_at,
+            completed_at=datetime.now(timezone.utc),
+        )
 
     def create_country(self, country_data: CountryCreate) -> CountryResponse:
         """Create a new country with business rule validation.
@@ -179,7 +242,7 @@ class CountryService:
         country = self.country_repo.create(country_data)
 
         logger.info(f"Country created: {country.name_common} (id={country.id})")
-        return CountryResponse.model_validate(country)
+        return self._to_response(country)
 
     def get_country(self, country_id: int) -> CountryDetailResponse:
         """Get country details with relationships.
@@ -194,7 +257,7 @@ class CountryService:
             RecordNotFoundError: If country not found
         """
         country = self._ensure_country_exists(country_id)
-        return CountryDetailResponse.model_validate(country)
+        return self._to_detail_response(country)
 
     def get_country_by_iso(self, iso_code: str) -> CountryDetailResponse:
         """Get country by ISO code (2 or 3 letter).
@@ -216,7 +279,7 @@ class CountryService:
         if not country:
             raise RecordNotFoundError("Country", f"iso_code={iso_code}")
 
-        return CountryDetailResponse.model_validate(country)
+        return self._to_detail_response(country)
 
     def list_countries(
         self,
@@ -280,7 +343,7 @@ class CountryService:
         logger.info(f"Updating country: {country.name_common} (id={country_id})")
 
         updated = self.country_repo.update(country_id, update_data)
-        return CountryResponse.model_validate(updated)
+        return self._to_response(updated)
 
     def delete_country(self, country_id: int) -> bool:
         """Delete a country (with cascade to relationships).
@@ -353,40 +416,31 @@ class CountryService:
                 synced_countries
             )
 
-            completed_at = datetime.now(timezone.utc)
-
-            result = CountrySyncResult(
+            result = self._create_sync_result(
                 sync_id=sync_id,
-                total_processed=total,
+                status="success",
+                total=total,
                 inserted=inserted,
                 updated=updated,
                 failed=0,
-                quality_summary=quality_summary,
-                status="success",
-                message=f"Synced {total} countries: "
-                f"{inserted} inserted, {updated} updated",
+                message=f"Synced {total} countries: {inserted} inserted, {updated} updated",
                 started_at=started_at,
-                completed_at=completed_at,
+                quality_summary=quality_summary,
             )
 
             logger.info(f"Batch sync {sync_id} completed: {result.message}")
             return result
 
         except BatchProcessError as e:
-            completed_at = datetime.now(timezone.utc)
-
-            result = CountrySyncResult(
+            result = self._create_sync_result(
                 sync_id=sync_id,
-                total_processed=len(countries_data),
+                status="partial_failure",
+                total=len(countries_data),
                 inserted=e.successful,
                 updated=0,
                 failed=e.failed,
-                quality_summary={},
-                status="partial_failure",
-                message=f"Batch sync partially failed: "
-                f"{e.successful} succeeded, {e.failed} failed",
+                message=f"Batch sync partially failed: {e.successful} succeeded, {e.failed} failed",
                 started_at=started_at,
-                completed_at=completed_at,
             )
 
             logger.warning(
