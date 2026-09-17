@@ -45,6 +45,45 @@ class CountryRepository:
         """
         self.session = session
 
+    def _base_query(self):
+        """Internal: Base query for all country queries.
+
+        Returns:
+            SQLAlchemy Query object for Country
+        """
+        return self.session.query(Country)
+
+    def _get_single_by_field(self, field, value: str) -> Optional[Country]:
+        """Internal: Generic single record fetch (DRY pattern).
+
+        Args:
+            field: SQLAlchemy column to filter on
+            value: Value to match (uppercased if string)
+
+        Returns:
+            Country instance or None if not found
+        """
+        filter_value = value.upper() if isinstance(value, str) else value
+        return self._base_query().filter(field == filter_value).first()
+
+    def _get_paginated_query(
+        self, filter_field=None, limit: int = 100, offset: int = 0
+    ) -> List[Country]:
+        """Internal: Generic paginated query builder (DRY pattern).
+
+        Args:
+            filter_field: Optional SQLAlchemy filter condition
+            limit: Maximum number of records
+            offset: Number of records to skip
+
+        Returns:
+            List of Country instances
+        """
+        query = self._base_query()
+        if filter_field is not None:
+            query = query.filter(filter_field)
+        return query.order_by(Country.name_common).limit(limit).offset(offset).all()
+
     def create(self, country_data: CountryCreate) -> Country:
         """Create a new country record.
 
@@ -80,7 +119,7 @@ class CountryRepository:
         Returns:
             Country instance or None if not found
         """
-        return self.session.query(Country).filter(Country.id == country_id).first()
+        return self._get_single_by_field(Country.id, country_id)
 
     def get_by_iso2(self, iso_code: str) -> Optional[Country]:
         """Get country by ISO 2-letter code.
@@ -91,7 +130,7 @@ class CountryRepository:
         Returns:
             Country instance or None if not found
         """
-        return self.session.query(Country).filter(Country.iso_code_2 == iso_code.upper()).first()
+        return self._get_single_by_field(Country.iso_code_2, iso_code)
 
     def get_by_iso3(self, iso_code: str) -> Optional[Country]:
         """Get country by ISO 3-letter code.
@@ -102,7 +141,7 @@ class CountryRepository:
         Returns:
             Country instance or None if not found
         """
-        return self.session.query(Country).filter(Country.iso_code_3 == iso_code.upper()).first()
+        return self._get_single_by_field(Country.iso_code_3, iso_code)
 
     def get_all(self, limit: int = 100, offset: int = 0) -> List[Country]:
         """Get all countries with pagination.
@@ -114,13 +153,7 @@ class CountryRepository:
         Returns:
             List of Country instances
         """
-        return (
-            self.session.query(Country)
-            .order_by(Country.name_common)
-            .limit(limit)
-            .offset(offset)
-            .all()
-        )
+        return self._get_paginated_query(limit=limit, offset=offset)
 
     def get_by_region(self, region: str, limit: int = 100, offset: int = 0) -> List[Country]:
         """Get countries by region with pagination.
@@ -133,13 +166,10 @@ class CountryRepository:
         Returns:
             List of Country instances for the region
         """
-        return (
-            self.session.query(Country)
-            .filter(Country.region == region)
-            .order_by(Country.name_common)
-            .limit(limit)
-            .offset(offset)
-            .all()
+        return self._get_paginated_query(
+            filter_field=Country.region == region,
+            limit=limit,
+            offset=offset,
         )
 
     def get_paginated(
