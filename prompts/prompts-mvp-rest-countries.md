@@ -185,3 +185,96 @@ Prompt 16 - Conventional Commits
 Contexto: Adicionados vários cógidos, pastas e alterações nos arquivos do projeto e deve realizar o commit no Github.
 Objetivo: Sugerir 3 mensagens de commit padrão Conventional Commits.
 Resposta: Apenas 3 linhas de commit.
+
+-----------------------
+
+Prompt 17 - Implementar os testes
+
+Contexto: Estou desenvolvendo uma aplicação em Python 3.11+ que consome dados da REST Countries API, e precisamos garantir os testes da aplicação.
+Objetivo: Criar suite completa de testes automatizados utilizando Pytest.
+Estilo: Atue como um QA Engineer / SDET sênior especializado em Python, Pytest e testes de APIs FastAPI.
+Tom: Testes claros, nomes descritivos e fixtures simples. 
+Audiencia: Developers, Arquitetos,
+QA, profissionais utilizando IA Generativa no desenvolvimento de software.
+Resposta: Não crie testes apenas para aumentar artificialmente o percentual de cobertura.
+Cada teste deve validar um comportamento relevante. Quando identificar um comportamento que não está especificado no projeto, marque como "A definir", em vez de inventar regra. Criar arquivo e disponibilizar no diretorio tests/.
+
+-----------------------
+
+Prompt 18 - Testes PriorityAdvisor
+
+Contexto: Estou desenvolvendo uma aplicação em Python 3.11+ que consome dados da REST Countries API, e temos que ter os testes do PriorityAdvisor.
+Objetivo: Criar os testes do PriorityAdvisor.
+Estilo: Atue como um QA Engineer / SDET sênior especializado em Python, Pytest e testes de APIs FastAPI.
+Tom: Testes claros, nomes descritivos e fixtures simples. 
+Audiencia: Developers, Arquitetos,
+QA, profissionais utilizando IA Generativa no desenvolvimento de software.
+Resposta: criar os testes PriorityAdvisor.
+
+-----------------------
+
+Prompt 19 - Testes de API
+
+Contexto: Estou desenvolvendo uma aplicação em Python 3.11+ que consome dados da REST Countries API.
+Objetivo: Criar os testes de rotas com TestClient para status 200, 201, 204 e 404
+Estilo: Atue como um QA Engineer / SDET sênior especializado em Python, Pytest e testes de APIs FastAPI.
+Tom: Testes claros, nomes descritivos e fixtures simples. 
+Audiencia: Developers, Arquitetos,
+QA, profissionais utilizando IA Generativa no desenvolvimento de software.
+Resposta: codigo de teste para routes, e Isolar dependencias de repositórios para evitar estado global entre testes.
+
+-----------------------
+
+Prompt 20 - Refatoração DRY/SRP
+
+Analise os arquivos app/services/task_service.py e app/repositories/task_repository.
+Objetivo: Sugerir refatoração com foco em Dry e SRP sem mudar comportamento externos.
+Resposta: 
+1. Lista de mudanças propostas. 
+2. patch sugerido por arquivo.
+
+-----------------------
+
+Prompt 22 - README final técnico
+
+Contexto: MVP de API com prioridade assistida por IA.
+Objetivo: Atualizar README completo com instalação, execução, testes, uso de IA, limitações, proximos passos.
+Tom: Tem técnico já utlizado no documento. 
+Audiencia: Developers, Arquitetos, POs, PMs,
+QA, profissionais utilizando IA Generativa no desenvolvimento de software.
+Resposta: Atualização do README por inteiro.
+
+-----------------------
+
+Prompt 23 - Revisão de Qualidade
+
+Com base no codigo e testes atuais, gere um cheklist com:
+- riscos técnicos restantes
+-Gaps de cobertura de teste
+- Melhorias prioritárias para a próxima release
+Responda em bullets curtos.
+
+-----------------------
+
+Prompt 24 - Próximas atividades
+
+Verifique qual atividade podemos realizar.
+
+-----------------------
+
+Prompt 25 - Status das Atividades
+
+Analisando o Backlog do projeto, quais entregas já foram realizadas?
+Listar sucintamente e indicar na frente com icone indicativo:
+exemplo de resposta:
+US-001: Configuração Ambiente de Desenvolvimento ✅
+US-004: Cliente HTTP para REST Countries API 🔄
+US-006: Configuração de Banco de Dados SQLite ⏳
+
+-----------------------
+
+Prompt 26 - Implementar US-004
+
+Implementar US-004 - HTTP Client para REST Countries API (dados reais)
+
+-----------------------

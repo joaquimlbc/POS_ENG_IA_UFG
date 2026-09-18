@@ -463,6 +463,13 @@ TOTAL ACUMULADO: 4 dias (~18 horas)
 
 **18/09/2026 - Implementação do Pipeline de Ingestão de Dados:**
 
+Solicitado via prompt a implementação dos USs, em momentos separados:
+US-004 - HTTP Client para REST Countries API
+US-005 - Modelos de Dados com SQLAlchemy
+US-006 - Configuração de Banco de Dados SQLite
+US-007 - Normalização de Dados da API 
+
+
 SESSÃO: HTTP Client, Models, Database, Normalization & Transformation
 Status Inicial: Backend com endpoints, sem pipeline de ingestão
 Status Final: Pipeline completo pronto para persistência de dados
