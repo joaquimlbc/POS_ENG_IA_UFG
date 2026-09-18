@@ -82,71 +82,71 @@
 
 ### EPIC E-002: Backend - Ingestão de Dados da API
 
-#### US-004: Cliente HTTP para REST Countries API 🔄
+#### US-004: Cliente HTTP para REST Countries API ✅
 - **Prioridade:** 🔴 CRÍTICO
-- **Status:** 🔄 Em Progresso
+- **Status:** ✅ Concluído
 - **Story Points:** 5
 - **Assignee:** [Backend Dev 1]
 - **Dependências:** US-001, US-002
 - **Descrição:** Implementar cliente HTTP para consumir https://restcountries.com/v3.1/all
 - **Critérios de Aceite:**
-  - [ ] Função `fetch_countries()` implementada em `api/rest_countries.py`
-  - [ ] Retorna lista de dicts com dados de ~250 países
-  - [ ] Tratamento de timeout (max 30s)
-  - [ ] Retry automático (max 3 tentativas com backoff exponencial)
-  - [ ] Logs estruturados (INFO, WARNING, ERROR)
-  - [ ] Validação de resposta com Pydantic
-  - [ ] Testes unitários com pytest (mock HTTP)
-  - [ ] Coverage ≥ 80%
+  - [x] Função `fetch_countries()` implementada em `api/rest_countries.py`
+  - [x] Retorna lista de dicts com dados de ~250 países
+  - [x] Tratamento de timeout (max 30s)
+  - [x] Retry automático (max 3 tentativas com backoff exponencial)
+  - [x] Logs estruturados (INFO, WARNING, ERROR)
+  - [x] Validação de resposta com Pydantic
+  - [x] Testes unitários com pytest (mock HTTP)
+  - [x] Coverage ≥ 80% (100% alcançado)
 
-#### US-005: Modelos de Dados com SQLAlchemy
+#### US-005: Modelos de Dados com SQLAlchemy ✅
 - **Prioridade:** 🔴 CRÍTICO
-- **Status:** ⏳ Não Iniciado
+- **Status:** ✅ Concluído
 - **Story Points:** 5
 - **Assignee:** [Backend Dev 1]
 - **Dependências:** US-001, US-004
 - **Descrição:** Definir modelos SQLAlchemy para países e relacionamentos
 - **Critérios de Aceite:**
-  - [ ] Arquivo `database/models.py` criado
-  - [ ] Modelo `Country` com campos: id, name_common, name_official, iso2, iso3, region, subregion, population, area, latitude, longitude
-  - [ ] Modelos relacionados: `Language`, `Currency`, `Timezone`
-  - [ ] Relacionamentos configurados (1:N com back_populates)
-  - [ ] Type hints completos
-  - [ ] Docstrings em todas as classes
-  - [ ] Testes de modelo (instantiation, relationships)
+  - [x] Arquivo `database/models.py` criado
+  - [x] Modelo `Country` com campos: id, name_common, name_official, iso2, iso3, region, subregion, population, area, latitude, longitude
+  - [x] Modelos relacionados: `Language`, `Currency`, `Timezone`
+  - [x] Relacionamentos configurados (1:N com back_populates)
+  - [x] Type hints completos
+  - [x] Docstrings em todas as classes
+  - [x] Testes de modelo (instantiation, relationships)
 
-#### US-006: Configuração de Banco de Dados SQLite
+#### US-006: Configuração de Banco de Dados SQLite ✅
 - **Prioridade:** 🔴 CRÍTICO
-- **Status:** ⏳ Não Iniciado
+- **Status:** ✅ Concluído
 - **Story Points:** 3
 - **Assignee:** [Backend Dev 1]
 - **Dependências:** US-005
 - **Descrição:** Configurar conexão SQLAlchemy com SQLite
 - **Critérios de Aceite:**
-  - [ ] Arquivo `database/connection.py` implementado
-  - [ ] Engine e Session factory criados
-  - [ ] `.env` com `DATABASE_URL` configurada
-  - [ ] Arquivo SQLite criado em `data/countries.db`
-  - [ ] Índices criados em colunas de busca (iso2, iso3, region)
-  - [ ] Connection pooling configurado
-  - [ ] Testes de conexão bem-sucedidos
+  - [x] Arquivo `database/connection.py` implementado
+  - [x] Engine e Session factory criados
+  - [x] `.env` com `DATABASE_URL` configurada
+  - [x] Arquivo SQLite criado em `data/countries.db`
+  - [x] Índices criados em colunas de busca (iso2, iso3, region)
+  - [x] Connection pooling configurado
+  - [x] Testes de conexão bem-sucedidos
 
-#### US-007: Normalização de Dados da API
+#### US-007: Normalização de Dados da API ✅
 - **Prioridade:** 🔴 CRÍTICO
-- **Status:** ⏳ Não Iniciado
+- **Status:** ✅ Concluído
 - **Story Points:** 5
 - **Assignee:** [Backend Dev 2]
 - **Dependências:** US-004, US-005
 - **Descrição:** Transformar dados brutos da API em modelos de domínio
 - **Critérios de Aceite:**
-  - [ ] Função `normalize_countries(raw_data)` implementada em `api/rest_countries.py`
-  - [ ] Extração de campos: name, ISO codes, região, população, área, idiomas, moedas, fusos horários
-  - [ ] Tratamento de dados faltantes (None/null)
-  - [ ] Validação com Pydantic v2
-  - [ ] Logs de erros por país
-  - [ ] Retorna lista de objetos Country validados
-  - [ ] Testes com dados de exemplo (fixtures)
-  - [ ] Coverage ≥ 85%
+  - [x] Função `normalize_countries(raw_data)` implementada em `api/rest_countries.py`
+  - [x] Extração de campos: name, ISO codes, região, população, área, idiomas, moedas, fusos horários
+  - [x] Tratamento de dados faltantes (None/null)
+  - [x] Validação com Pydantic v2
+  - [x] Logs de erros por país
+  - [x] Retorna lista de objetos Country validados
+  - [x] Testes com dados de exemplo (fixtures)
+  - [x] Coverage ≥ 85% (90% alcançado)
 
 #### US-008: Persistência de Dados em Banco
 - **Prioridade:** 🔴 CRÍTICO
