@@ -14,6 +14,16 @@ from urllib3.util.retry import Retry
 
 from app.utils.logger import get_logger
 
+# Import database models for transformation
+try:
+    from app.database.models import Country, Currency, Language, Timezone
+except ImportError:
+    # Allow module to be imported without database models present
+    Country = None
+    Currency = None
+    Language = None
+    Timezone = None
+
 logger = get_logger(__name__)
 
 API_URL = "https://restcountries.com/v3.1/all"
@@ -226,3 +236,115 @@ def normalize_countries(raw_data: List[dict]) -> tuple[List[NormalizedCountry], 
     )
 
     return normalized, errors
+
+
+def transform_to_country_model(normalized: NormalizedCountry) -> Optional["Country"]:
+    """Transform normalized country data to SQLAlchemy Country model.
+
+    Converts Pydantic normalized schema to database Country model with
+    related Language, Currency, and Timezone entities.
+
+    Args:
+        normalized: NormalizedCountry instance with validated data
+
+    Returns:
+        Country model instance with related entities, or None if transformation fails
+
+    Raises:
+        ValueError: If required fields are missing or invalid
+    """
+    if Country is None:
+        raise ImportError("Database models not available")
+
+    try:
+        # Create country record
+        country = Country(
+            name_common=normalized.name_common,
+            name_official=normalized.name_official,
+            iso_code_2=normalized.iso_code_2,
+            iso_code_3=normalized.iso_code_3,
+            region=normalized.region,
+            subregion=normalized.subregion,
+            population=normalized.population,
+            area=normalized.area,
+            latitude=normalized.latitude,
+            longitude=normalized.longitude,
+        )
+
+        # Add language relationships
+        if normalized.languages:
+            for lang_name in normalized.languages:
+                # Extract language code from name (simplified - assumes ISO 639-1 codes)
+                # In production, you'd have a proper mapping
+                language = Language(
+                    language_name=lang_name,
+                    language_code=lang_name[:3].lower(),  # Simplified
+                )
+                country.languages.append(language)
+
+        # Add currency relationships
+        if normalized.currencies:
+            for curr_code in normalized.currencies:
+                currency = Currency(
+                    currency_code=curr_code,
+                    currency_name=curr_code,  # Would need mapping in production
+                )
+                country.currencies.append(currency)
+
+        # Add timezone relationships
+        if normalized.timezones:
+            for tz_name in normalized.timezones:
+                timezone = Timezone(timezone_name=tz_name)
+                country.timezones.append(timezone)
+
+        logger.debug(
+            f"Transformed {normalized.name_common} to Country model "
+            f"with {len(country.languages)} languages, "
+            f"{len(country.currencies)} currencies, "
+            f"{len(country.timezones)} timezones"
+        )
+
+        return country
+
+    except (ValueError, TypeError) as e:
+        logger.error(f"Failed to transform {normalized.name_common}: {str(e)}")
+        return None
+
+
+def transform_normalized_countries(
+    normalized_countries: List[NormalizedCountry],
+) -> tuple[List["Country"], List[str]]:
+    """Transform list of normalized countries to SQLAlchemy Country models.
+
+    Args:
+        normalized_countries: List of NormalizedCountry instances
+
+    Returns:
+        Tuple of (valid Country models, list of error messages)
+    """
+    if Country is None:
+        raise ImportError("Database models not available")
+
+    countries = []
+    errors = []
+
+    logger.info(f"Transforming {len(normalized_countries)} normalized countries to models")
+
+    for normalized in normalized_countries:
+        try:
+            country = transform_to_country_model(normalized)
+            if country is not None:
+                countries.append(country)
+            else:
+                errors.append(f"Failed to transform {normalized.name_common}")
+        except Exception as e:
+            error_msg = f"Transformation error for {normalized.name_common}: {str(e)}"
+            logger.error(error_msg)
+            errors.append(error_msg)
+
+    logger.info(
+        f"Transformed {len(countries)}/{len(normalized_countries)} countries "
+        f"({len(errors)} errors)"
+    )
+
+    return countries, errors

@@ -336,3 +336,51 @@ class TestIntegration:
             assert len(normalized) == 2
             assert len(errors) == 0
             assert all(isinstance(c, NormalizedCountry) for c in normalized)
+
+    def test_normalize_countries_with_edge_case_data(self):
+        """Should handle various edge cases in data."""
+        edge_cases = [
+            {
+                "name": {"common": "Special Chars ñ", "official": "Official ñ"},
+                "cca2": "SC",
+                "cca3": "SPC",
+                "region": "Test",
+                "population": 0,  # Edge case: zero population
+            },
+            {
+                "name": {"common": "Large Country", "official": "Very Large Country"},
+                "cca2": "LC",
+                "cca3": "LRG",
+                "region": "Test",
+                "population": 9999999999,  # Large number
+                "area": 99999999.99,
+            },
+        ]
+
+        normalized, errors = normalize_countries(edge_cases)
+
+        assert len(normalized) == 2
+        assert len(errors) == 0
+        assert normalized[0].name_common == "Special Chars ñ"
+        assert normalized[1].population == 9999999999
+
+    def test_normalize_with_extra_fields(self):
+        """Should ignore extra fields not in schema."""
+        raw_data = [
+            {
+                "name": {"common": "Test", "official": "Test Official"},
+                "cca2": "TS",
+                "cca3": "TST",
+                "region": "Test",
+                "population": 1000,
+                "extra_field_1": "should be ignored",
+                "extra_field_2": 12345,
+                "extra_field_3": {"nested": "data"},
+            }
+        ]
+
+        normalized, errors = normalize_countries(raw_data)
+
+        assert len(normalized) == 1
+        assert len(errors) == 0
+        assert normalized[0].name_common == "Test"
