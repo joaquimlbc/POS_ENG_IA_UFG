@@ -566,6 +566,6 @@ chore: build, deps, etc
 
 ---
 
-**Última atualização:** 17/09/2026  
-**Versão atual:** 0.1-beta (Production Ready)  
+**Última atualização:** 19/09/2026  
+**Versão atual:** 0.1 (Production Ready)  
 **Próximo Release:** 0.2 (25/09/2026)
