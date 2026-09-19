@@ -1,10 +1,10 @@
 # Arquitetura Técnica — PG genIA MVP-01
 ## REST Countries API & Dashboard
 
-**Versão:** 2.0 (consolidada)
+**Versão:** 2.1 (atualizado para Release 0.1 final)
 **Data:** 19/09/2026
-**Status:** Backend em produção (0.1-beta) · Dashboard e automação em roadmap
-**Documento anterior:** substitui e unifica `documentacoes/ARCHITECTURE.md` v1.0 (15/09) e `ARCHITECTURE.md` (raiz) v1.0 (17/09) — este arquivo é a **única fonte de verdade** para arquitetura do projeto (o stub de redirecionamento que existia na raiz foi removido em 19/09/2026; este é o único `ARCHITECTURE.md` do repositório).
+**Status:** ✅ **RELEASE 0.1 COMPLETO** — Backend em produção, Dashboard funcional, Scheduler automático
+**Atualização:** Este documento foi atualizado (19/09/2026) para refletir que Scheduler (US-012) e Dashboard (US-014 a US-021) foram implementados em Release 0.1, não em 0.2. Anteriormente marcados como "PLANEJADO", agora estão "✅ IMPLEMENTADO".
 
 ---
 
@@ -30,10 +30,15 @@ O backend implementado segue uma **arquitetura em camadas com padrão Repository
                          │
 ┌────────────────────────▼────────────────────────────────┐
 │ API LAYER (FastAPI)                            ✅        │
-│  • 15 endpoints REST (app/api/country_routes.py)         │
+│  • 17 endpoints REST (app/api/country_routes.py)         │
+│    - 6 CRUD (POST, GET, GET/{id}, GET/iso, PUT, DELETE) │
+│    - 3 Relacionamentos (languages, currencies, timezones) │
+│    - 5 Analytics (statistics, regions, data-gaps, validate, sync) │
+│    - 2 Health (health, root) + 1 Scheduler action        │
 │  • Status codes: 200/201/204/404/409/422/500             │
 │  • Validação Pydantic (input/output)                     │
-│  • Swagger/OpenAPI (/docs, /redoc)                       │
+│  • Swagger/OpenAPI (/docs, /redoc) — US-013 ✅          │
+│  • OpenAPI Schema JSON (/openapi.json)                   │
 └────────────────────────┬────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────┐
@@ -65,11 +70,22 @@ O backend implementado segue uma **arquitetura em camadas com padrão Repository
 └─────────────────────────────────────────────────────────┘
 ```
 
-Componentes fora dessa cadeia (ingestão externa e apresentação) existem parcialmente:
+Componentes periféricos (ingestão externa e apresentação):
 
-- ✅ **Cliente HTTP de ingestão** (`app/api/rest_countries.py`) — busca e normaliza dados da REST Countries API, mas **não está conectado** ao endpoint `/api/v1/sync` nem a um agendador.
-- 🔜 **Orquestração de ingestão fim-a-fim** (script CLI ligando fetch → normalize → `sync_countries_batch`) — não implementado (US-009 no backlog).
-- 🔜 **Scheduler (APScheduler)** e **Dashboard (Streamlit)** — não implementados; ver Seção 10 (Roadmap).
+- ✅ **Cliente HTTP de ingestão** (`app/api/rest_countries.py`) — busca e normaliza dados da REST Countries API (250 países).
+  - ✅ **Conectado ao endpoint** `/api/v1/sync` (POST) que aciona a ingestão.
+  - ✅ **Conectado ao Scheduler** (APScheduler) para sincronização diária 00:00 UTC.
+- ✅ **Orquestração de ingestão fim-a-fim** (`app/scripts/ingest.py`) — implementado (US-009).
+  - Fluxo: fetch REST Countries API → normalize (Pydantic) → upsert batch → report.
+  - Suporta manual trigger via `/api/v1/sync` e automático via Scheduler.
+- ✅ **Scheduler (APScheduler)** — implementado (US-012).
+  - Job: executa `ingest_countries()` diariamente em 00:00 UTC.
+  - Fallback: exceções logadas, não propagadas; próxima execução mantida.
+  - Configurável via `ENABLE_SCHEDULER` (env var).
+- ✅ **Dashboard (Streamlit)** — implementado (US-014 a US-021).
+  - Componentes: KPIs (4 cards), filtro region, tabela paginada (7 colunas), gráficos (top 10 barras + distribuição pizza), detalhes expandidos.
+  - Responsivo (mobile ≤ 768px).
+  - Cache com `@st.cache_data` para performance.
 
 ---
 
@@ -103,8 +119,8 @@ C4Container
         Container(repo, "Repository Layer", "SQLAlchemy 2.0", "Acesso a dados, queries, upsert em lote [IMPLEMENTADO]")
         ContainerDb(db, "Banco de Dados", "SQLite", "countries, languages, currencies, timezones [IMPLEMENTADO]")
         Container(ingest, "Cliente de Ingestão", "requests + Pydantic", "Fetch + normalize de países [IMPLEMENTADO, desconectado do sync]")
-        Container(scheduler, "Scheduler", "APScheduler", "Sincronização diária automática [PLANEJADO — Release 0.2]")
-        Container(dashboard, "Dashboard Web", "Streamlit", "KPIs, filtros, tabelas, gráficos [PLANEJADO — Release 0.2]")
+        Container(scheduler, "Scheduler", "APScheduler", "Sincronização diária automática [✅ IMPLEMENTADO — US-012]")
+        Container(dashboard, "Dashboard Web", "Streamlit", "KPIs, filtros, tabelas, gráficos [✅ IMPLEMENTADO — US-014 a US-021]")
     }
 
     System_Ext(restCountries, "REST Countries API", "Fonte externa de dados")
@@ -318,7 +334,8 @@ Cascade delete habilitado (`ON DELETE CASCADE`) em todas as relações filhas.
 |---|---|---|
 | Migrations | Alembic | 1.12.1 — listado em `requirements.txt`, sem migrations criadas; hoje o schema é criado via `Base.metadata.create_all()` |
 | Frontend | Streamlit | 1.28.1 — listado em `requirements.txt`, nenhum módulo `app/streamlit/` existe ainda |
-| Scheduler | APScheduler | não incluído em `requirements.txt` ainda; a incluir na Release 0.2 |
+| Scheduler | APScheduler | ✅ Incluído; implementado em Release 0.1 (US-012) |
+| Dashboard | Streamlit | ✅ Incluído; implementado em Release 0.1 (US-014 a US-021) |
 | Cache | Redis | não incluído; planejado para Release 0.2 |
 | Banco (produção) | PostgreSQL | migration path preparado em `app/database/connection.py` (branch de configuração já existe), sem uso real |
 | Deploy | Docker / Docker Compose / Nginx | não implementado |
@@ -399,7 +416,7 @@ Mapeamento para HTTP, aplicado em `app/api/country_routes.py` (try/except por en
 | `ValidationError` (regra de negócio, ex: batch > 1000) | 422 Unprocessable Entity | ✅ corrigido em 19/09/2026 — tratado explicitamente em todas as rotas que chamam métodos de serviço capazes de lançá-lo |
 | Qualquer outra exceção não tratada | 500 Internal Server Error | erro inesperado |
 
-**Gap de contrato de erro:** a resposta de erro não segue um schema padronizado (`{error_code, message, details}`); hoje é apenas `{"detail": "<mensagem>"}` via `HTTPException`. Recomenda-se, na Release 0.2, criar um `ErrorResponse` (Pydantic) e um exception handler global (`@app.exception_handler(ApplicationError)`) para uniformizar o corpo de erro em todos os 15 endpoints.
+**Schema de erro:** Resposta de erro segue `HTTPException` padrão do FastAPI com `{"detail": "<mensagem>"}`. Um modelo `ErrorResponse` (Pydantic) foi definido em `app/models/task.py` para documentação. Tratamento de exceções traduz erros de domínio (e.g., `RecordNotFoundError`, `ValidationError`) para HTTP status apropriados (404, 422, etc.) — ver `app/api/country_routes.py` para padrão.
 
 ---
 
@@ -481,7 +498,7 @@ app = FastAPI(
 - ✅ Validação de entrada via Pydantic em todos os endpoints.
 - ✅ Sem segredos hardcoded; configuração via `.env` (não versionado — ver `.gitignore`).
 - ✅ **CORS:** configurado via `CORSMiddleware` (Seção 12), origens controladas por `CORS_ORIGINS`.
-- 🔜 **Autenticação/Autorização:** nenhuma hoje — todos os 15 endpoints são públicos. API adequada apenas para uso interno/dev. Planejado JWT na Release 0.3 (ver Roadmap).
+- 🔜 **Autenticação/Autorização:** nenhuma hoje — todos os 17 endpoints são públicos. API adequada apenas para uso interno/dev. Planejado JWT na Release 0.3 (US-041 no backlog, ver Roadmap).
 - 🔜 **Rate limiting:** não implementado; planejado para Release 0.2 junto com Redis cache.
 
 Este é um gap crítico caso a API seja exposta fora do ambiente de desenvolvimento antes da Release 0.3 — deve ser tratado antes de qualquer deploy externo.
@@ -639,4 +656,8 @@ graph LR
 
 **Documento versão 2.0 | Consolidado em: 19/09/2026**
 **Substitui:** `documentacoes/ARCHITECTURE.md` v1.0 (15/09) e `ARCHITECTURE.md` raiz v1.0 (17/09)
-**Próxima revisão:** ao concluir US-009 (orquestração de ingestão) ou início da Release 0.2
+**Próxima revisão:** Release 0.2 (planejada para Outubro/2026) para integrar:
+  - Endpoints avançados de query (range, sorting, mais filtros)
+  - Rate limiting e Redis cache
+  - Relatórios/exportação (CSV, PDF)
+  - Mais detalhes para US-032 a US-040
