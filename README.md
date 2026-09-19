@@ -29,23 +29,23 @@ Desenvolver API RESTful com arquitetura em 4 camadas que consome dados da REST C
 ## 📸 Screenshots
 
 ### Dashboard - Tela Principal com KPIs
-![Dashboard KPIs](screenshots/img_1.png)
+![Dashboard KPIs](documentacoes/screenshots/img_1.png)
 *KPIs com total de países, população global, região mais populosa e maior país por área*
 
 ### Tabela Interativa de Países
-![Tabela de Países](screenshots/img_2.png)
+![Tabela de Países](documentacoes/screenshots/img_2.png)
 *Tabela com 7 colunas (Flag, Nome, População, Área, Região, Densidade, Ações), paginação e busca*
 
 ### Gráficos de Top 10
-![Top 10 por População e Área](screenshots/img_3.png)
+![Top 10 por População e Área](documentacoes/screenshots/img_3.png)
 *Gráficos de barras mostrando Top 10 países por população e Top 10 por área*
 
 ### Distribuição Regional
-![Pizza Charts - Distribuição](screenshots/img_4.png)
+![Pizza Charts - Distribuição](documentacoes/screenshots/img_4.png)
 *Distribuição de população por região (%) e distribuição de quantidade de países por região*
 
 ### Detalhes Expandidos do País
-![Detalhes Expandidos](screenshots/img_5.png)
+![Detalhes Expandidos](documentacoes/screenshots/img_5.png)
 *Informações completas com Identificação, Geografia, Moedas, Idiomas e Fusos Horários*
 
 ---
