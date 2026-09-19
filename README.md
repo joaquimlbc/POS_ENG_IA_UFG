@@ -52,22 +52,27 @@ Desenvolver API RESTful com arquitetura em 4 camadas que consome dados da REST C
 
 ## 🏗️ Arquitetura
 
-```
-FastAPI Application (app/main.py)
-         ↓
-API Layer (app/api/country_routes.py - 14 endpoints)
-         ↓
-Service Layer (app/service/country_service.py - Business logic)
-         ↓
-Repository Layer (app/database/repository.py - Data access)
-         ↓
-ORM Models (app/database/models.py - SQLAlchemy)
-         ↓
-Database (SQLite)
+```mermaid
+flowchart TD
+    APP["FastAPI Application<br/>app/main.py"]
+    API["API Layer<br/>app/api/country_routes.py<br/>17 endpoints"]
+    SVC["Service Layer<br/>app/service/country_service.py<br/>Business logic"]
+    REPO["Repository Layer<br/>app/database/repository.py<br/>Data access"]
+    ORM["ORM Models<br/>app/database/models.py<br/>SQLAlchemy"]
+    DB[("Database<br/>SQLite")]
 
-Validation Layer (Pydantic - app/models/task.py - 15 models)
-Exception Layer (Domain errors - app/utils/errors.py - 10 exceptions)
-Logging Layer (Structured - app/utils/logger.py)
+    VAL["Validation Layer<br/>Pydantic · app/models/task.py<br/>20 models"]
+    EXC["Exception Layer<br/>Domain errors · app/utils/errors.py<br/>10 exceptions"]
+    LOG["Logging Layer<br/>Structured · app/utils/logger.py"]
+
+    APP --> API --> SVC --> REPO --> ORM --> DB
+
+    API -.validated by.-> VAL
+    SVC -.raises.-> EXC
+    API -.logs via.-> LOG
+
+    style DB fill:#4a90d9,color:#fff
+    style APP fill:#2d5f8a,color:#fff
 ```
 
 ---
