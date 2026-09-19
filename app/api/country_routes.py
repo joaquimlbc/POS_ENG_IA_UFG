@@ -4,7 +4,9 @@ All endpoints use the service layer (CountryService) for business logic.
 Dependency injection provides database sessions automatically.
 """
 
-from typing import List
+import uuid
+from datetime import datetime, timezone
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
@@ -18,10 +20,13 @@ from app.models.task import (
     CountryUpdate,
     CurrencyCreate,
     GlobalStatistics,
+    HealthCheckResponse,
     LanguageCreate,
+    RegionStatistics,
     SyncLogResponse,
     TimezoneCreate,
 )
+from app.scripts.ingest import ingest_countries
 from app.service import CountryService
 from app.utils.errors import (
     DuplicateRecordError,
@@ -59,7 +64,7 @@ def get_country_service(session: Session = Depends(get_db_session)) -> CountrySe
 def create_country(
     country_data: CountryCreate,
     service: CountryService = Depends(get_country_service),
-):
+) -> CountryResponse:
     """Create a new country.
 
     **Request body:**
@@ -103,12 +108,12 @@ def create_country(
 def list_countries(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
-    region: str | None = Query(
+    region: Optional[str] = Query(
         None,
         description="Filter by region (Africa, Americas, Asia, Europe, Oceania)",
     ),
     service: CountryService = Depends(get_country_service),
-):
+) -> CountryListResponse:
     """List all countries with pagination and optional region filtering.
 
     **Query parameters:**
@@ -137,7 +142,7 @@ def list_countries(
 def get_country(
     country_id: int = Path(..., gt=0, description="Country ID"),
     service: CountryService = Depends(get_country_service),
-):
+) -> CountryDetailResponse:
     """Get detailed information about a country by ID.
 
     Includes: languages, currencies, timezones.
@@ -164,7 +169,7 @@ def get_country(
 def get_country_by_iso(
     iso_code: str = Path(..., description="ISO2 (BR) or ISO3 (BRA) code"),
     service: CountryService = Depends(get_country_service),
-):
+) -> CountryDetailResponse:
     """Get country by ISO 2-letter or 3-letter code.
 
     **Example:** /countries/iso/BR or /countries/iso/BRA
@@ -195,15 +200,21 @@ def get_country_by_iso(
 )
 def update_country(
     country_id: int = Path(..., gt=0, description="Country ID"),
-    country_data: CountryUpdate = None,
+    country_data: Optional[CountryUpdate] = None,
     service: CountryService = Depends(get_country_service),
-):
+) -> CountryResponse:
     """Update country fields (all optional).
 
     Only provided fields will be updated.
     """
     try:
-        return service.update_country(country_id, country_data)
+        # mypy (without the pydantic plugin, which is incompatible with the
+        # pinned mypy/pydantic versions here) can't see that every
+        # CountryUpdate field has a Field(None, ...) default, so it treats
+        # a no-arg construction as missing required arguments. Valid at
+        # runtime: all fields are Optional with real defaults.
+        empty_update = country_data or CountryUpdate()  # type: ignore[call-arg]
+        return service.update_country(country_id, empty_update)
     except RecordNotFoundError as e:
         raise HTTPException(status_code=404, detail=e.message)
     except DuplicateRecordError as e:
@@ -232,7 +243,7 @@ def update_country(
 def delete_country(
     country_id: int = Path(..., gt=0, description="Country ID"),
     service: CountryService = Depends(get_country_service),
-):
+) -> None:
     """Delete a country (cascade deletes relationships).
 
     Deletes: languages, currencies, timezones.
@@ -253,13 +264,23 @@ def delete_country(
     response_model=CountryDetailResponse,
     status_code=201,
     summary="Add languages to country",
+    responses={
+        201: {"description": "Languages added successfully"},
+        404: {"description": "Country not found"},
+        422: {"description": "Validation error"},
+    },
 )
 def add_languages(
     country_id: int = Path(..., gt=0),
-    languages: List[LanguageCreate] = None,
+    languages: Optional[List[LanguageCreate]] = None,
     service: CountryService = Depends(get_country_service),
-):
-    """Add languages to a country."""
+) -> CountryDetailResponse:
+    """Add languages to a country.
+
+    Request body should contain a list of language objects with:
+    - language_code: ISO 639-1 or 639-3 language code (e.g., "pt", "en")
+    - language_name: Language name (e.g., "Portuguese", "English")
+    """
     try:
         return service.add_languages(country_id, languages or [])
     except RecordNotFoundError as e:
@@ -276,13 +297,23 @@ def add_languages(
     response_model=CountryDetailResponse,
     status_code=201,
     summary="Add currencies to country",
+    responses={
+        201: {"description": "Currencies added successfully"},
+        404: {"description": "Country not found"},
+        422: {"description": "Validation error"},
+    },
 )
 def add_currencies(
     country_id: int = Path(..., gt=0),
-    currencies: List[CurrencyCreate] = None,
+    currencies: Optional[List[CurrencyCreate]] = None,
     service: CountryService = Depends(get_country_service),
-):
-    """Add currencies to a country."""
+) -> CountryDetailResponse:
+    """Add currencies to a country.
+
+    Request body should contain a list of currency objects with:
+    - currency_code: ISO 4217 currency code (e.g., "USD", "BRL", "EUR")
+    - currency_name: Currency name (e.g., "US Dollar", "Brazilian Real")
+    """
     try:
         return service.add_currencies(country_id, currencies or [])
     except RecordNotFoundError as e:
@@ -299,13 +330,22 @@ def add_currencies(
     response_model=CountryDetailResponse,
     status_code=201,
     summary="Add timezones to country",
+    responses={
+        201: {"description": "Timezones added successfully"},
+        404: {"description": "Country not found"},
+        422: {"description": "Validation error"},
+    },
 )
 def add_timezones(
     country_id: int = Path(..., gt=0),
-    timezones: List[TimezoneCreate] = None,
+    timezones: Optional[List[TimezoneCreate]] = None,
     service: CountryService = Depends(get_country_service),
-):
-    """Add timezones to a country."""
+) -> CountryDetailResponse:
+    """Add timezones to a country.
+
+    Request body should contain a list of timezone objects with:
+    - timezone_name: IANA timezone name (e.g., "America/Sao_Paulo", "Europe/London")
+    """
     try:
         return service.add_timezones(country_id, timezones or [])
     except RecordNotFoundError as e:
@@ -322,6 +362,13 @@ def add_timezones(
 # ============================================================================
 
 
+_INGEST_STATUS_TO_SYNC_STATUS = {
+    "success": "success",
+    "partial_failure": "partial",
+    "failure": "failed",
+}
+
+
 @router.post(
     "/sync",
     response_model=SyncLogResponse,
@@ -333,34 +380,39 @@ def add_timezones(
 )
 def trigger_sync(
     service: CountryService = Depends(get_country_service),
-):
-    """Trigger manual synchronization from REST Countries API.
+) -> SyncLogResponse:
+    """Trigger synchronization from the REST Countries API.
 
-    This endpoint initiates a sync operation that:
+    Runs the same pipeline as `python -m app.scripts.ingest` (fetch ->
+    normalize -> persist), reusing this request's database session:
     1. Fetches countries from REST Countries API
     2. Normalizes and validates data
     3. Performs batch upsert (insert new, update existing)
-    4. Assesses data quality
 
-    Note: In production, this should be a background task.
+    Note: this runs synchronously in the request; for very large syncs a
+    background task/queue would be preferable, but the REST Countries
+    dataset (~250 countries) completes in a few seconds.
     """
+    sync_id = f"sync_{uuid.uuid4().hex[:12]}"
     try:
-        logger.info("Sync operation triggered manually")
-        # Note: In production, call async function or queue task
-        # For now, returning placeholder
-        from datetime import datetime, timezone
+        logger.info(f"Sync operation triggered manually: {sync_id}")
+        report = ingest_countries(session=service.session)
 
         return SyncLogResponse(
-            sync_id="sync_manual",
-            status="success",
+            sync_id=sync_id,
+            status=_INGEST_STATUS_TO_SYNC_STATUS[report.status],
             timestamp=datetime.now(timezone.utc),
-            countries_inserted=0,
-            countries_updated=0,
-            countries_skipped=0,
-            message="Sync operation queued for background processing",
+            countries_inserted=report.inserted,
+            countries_updated=report.updated,
+            countries_skipped=(
+                report.failed
+                + len(report.normalization_errors)
+                + len(report.transformation_errors)
+            ),
+            message=report.message,
         )
     except Exception as e:
-        logger.error(f"Failed to trigger sync: {e}")
+        logger.error(f"Sync operation {sync_id} failed: {e}")
         raise HTTPException(status_code=500, detail="Sync operation failed")
 
 
@@ -374,12 +426,33 @@ def trigger_sync(
     response_model=GlobalStatistics,
     summary="Get global statistics",
     responses={
-        200: {"description": "Global statistics with regional breakdown"},
+        200: {
+            "description": "Global statistics with regional breakdown",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "total_countries": 250,
+                        "total_population": 8000000000,
+                        "total_area": 510000000.0,
+                        "average_population": 32000000.0,
+                        "average_area": 2040000.0,
+                        "regions": [
+                            {
+                                "region": "Americas",
+                                "total_countries": 35,
+                                "total_population": 1023456789,
+                                "total_area": 42165000.0,
+                            }
+                        ],
+                    }
+                }
+            },
+        },
     },
 )
 def get_statistics(
     service: CountryService = Depends(get_country_service),
-):
+) -> GlobalStatistics:
     """Get global statistics about all countries.
 
     Includes:
@@ -398,14 +471,35 @@ def get_statistics(
 
 @router.get(
     "/regions",
+    response_model=List[RegionStatistics],
     summary="Get regional breakdown",
     responses={
-        200: {"description": "Statistics by region"},
+        200: {
+            "description": "Statistics by region",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "region": "Americas",
+                            "total_countries": 35,
+                            "total_population": 1023456789,
+                            "total_area": 42165000.0,
+                        },
+                        {
+                            "region": "Europe",
+                            "total_countries": 50,
+                            "total_population": 750000000,
+                            "total_area": 10500000.0,
+                        },
+                    ]
+                }
+            },
+        },
     },
 )
 def get_regions(
     service: CountryService = Depends(get_country_service),
-):
+) -> List[RegionStatistics]:
     """Get statistics breakdown by region.
 
     Returns: Total countries, population, and area per region.
@@ -421,12 +515,42 @@ def get_regions(
     "/data-gaps",
     summary="Identify data quality issues",
     responses={
-        200: {"description": "Countries with data quality issues"},
+        200: {
+            "description": "Countries with data quality issues",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "CRITICAL": [
+                            {
+                                "country_id": 5,
+                                "name": "Example Country",
+                                "issues": ["Missing ISO code"],
+                            }
+                        ],
+                        "HIGH": [],
+                        "MEDIUM": [
+                            {
+                                "country_id": 10,
+                                "name": "Another Country",
+                                "issues": ["Missing area", "Missing timezone"],
+                            }
+                        ],
+                        "LOW": [
+                            {
+                                "country_id": 1,
+                                "name": "Brazil",
+                                "issues": [],
+                            }
+                        ],
+                    }
+                }
+            },
+        },
     },
 )
 def analyze_data_gaps(
     service: CountryService = Depends(get_country_service),
-):
+) -> dict[str, Any]:
     """Identify countries with data quality issues.
 
     Returns: Countries prioritized by quality assessment:
@@ -455,7 +579,7 @@ def analyze_data_gaps(
 def validate_country(
     country_id: int = Path(..., gt=0, description="Country ID"),
     service: CountryService = Depends(get_country_service),
-):
+) -> dict[str, Any]:
     """Validate data integrity and quality of a country.
 
     Returns:
@@ -486,15 +610,11 @@ def validate_country(
         200: {"description": "Service is healthy"},
     },
 )
-def health_check():
+def health_check() -> HealthCheckResponse:
     """Health check endpoint for monitoring and orchestrators.
 
     Returns: Status, version, and timestamp.
     """
-    from datetime import datetime, timezone
-
-    from app.models.task import HealthCheckResponse
-
     return HealthCheckResponse(
         status="ok",
         version="1.0.0",

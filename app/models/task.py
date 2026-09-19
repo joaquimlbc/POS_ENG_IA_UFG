@@ -7,7 +7,7 @@ for validation, serialization, and API contracts.
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 
 class LanguageBase(BaseModel):
@@ -30,7 +30,16 @@ class LanguageResponse(LanguageBase):
 
     id: int = Field(..., gt=0)
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": 1,
+                "language_code": "pt",
+                "language_name": "Portuguese",
+            }
+        },
+    )
 
 
 class CurrencyBase(BaseModel):
@@ -59,7 +68,16 @@ class CurrencyResponse(CurrencyBase):
 
     id: int = Field(..., gt=0)
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": 1,
+                "currency_code": "BRL",
+                "currency_name": "Brazilian Real",
+            }
+        },
+    )
 
 
 class TimezoneBase(BaseModel):
@@ -81,7 +99,15 @@ class TimezoneResponse(TimezoneBase):
 
     id: int = Field(..., gt=0)
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": 1,
+                "timezone_name": "America/Sao_Paulo",
+            }
+        },
+    )
 
 
 class CountryBase(BaseModel):
@@ -157,7 +183,26 @@ class CountryResponse(CountryBase):
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": 1,
+                "name_common": "Brazil",
+                "name_official": "Federative Republic of Brazil",
+                "iso_code_2": "BR",
+                "iso_code_3": "BRA",
+                "region": "Americas",
+                "subregion": "South America",
+                "population": 215313498,
+                "area": 8514877.0,
+                "latitude": -14.2350,
+                "longitude": -51.9253,
+                "created_at": "2026-09-15T10:30:00",
+                "updated_at": "2026-09-15T10:30:00",
+            }
+        },
+    )
 
 
 class CountryDetailResponse(CountryResponse):
@@ -167,7 +212,35 @@ class CountryDetailResponse(CountryResponse):
     currencies: List[CurrencyResponse] = Field(default_factory=list)
     timezones: List[TimezoneResponse] = Field(default_factory=list)
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": 1,
+                "name_common": "Brazil",
+                "name_official": "Federative Republic of Brazil",
+                "iso_code_2": "BR",
+                "iso_code_3": "BRA",
+                "region": "Americas",
+                "subregion": "South America",
+                "population": 215313498,
+                "area": 8514877.0,
+                "latitude": -14.2350,
+                "longitude": -51.9253,
+                "created_at": "2026-09-15T10:30:00",
+                "updated_at": "2026-09-15T10:30:00",
+                "languages": [
+                    {"id": 1, "language_code": "pt", "language_name": "Portuguese"}
+                ],
+                "currencies": [
+                    {"id": 1, "currency_code": "BRL", "currency_name": "Brazilian Real"}
+                ],
+                "timezones": [
+                    {"id": 1, "timezone_name": "America/Sao_Paulo"}
+                ],
+            }
+        },
+    )
 
 
 class CountryListResponse(BaseModel):
@@ -181,14 +254,42 @@ class CountryListResponse(BaseModel):
 
     @field_validator("pages", mode="before")
     @classmethod
-    def calculate_pages(cls, v: int, info) -> int:
+    def calculate_pages(cls, v: int, info: ValidationInfo) -> int:
         """Auto-calculate total pages if not provided."""
         if v == 0 and "total" in info.data and "limit" in info.data:
             import math
-            return math.ceil(info.data["total"] / info.data["limit"])
+
+            return int(math.ceil(info.data["total"] / info.data["limit"]))
         return v
 
-    model_config = ConfigDict(str_strip_whitespace=True)
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        json_schema_extra={
+            "example": {
+                "items": [
+                    {
+                        "id": 1,
+                        "name_common": "Brazil",
+                        "name_official": "Federative Republic of Brazil",
+                        "iso_code_2": "BR",
+                        "iso_code_3": "BRA",
+                        "region": "Americas",
+                        "subregion": "South America",
+                        "population": 215313498,
+                        "area": 8514877.0,
+                        "latitude": -14.2350,
+                        "longitude": -51.9253,
+                        "created_at": "2026-09-15T10:30:00",
+                        "updated_at": "2026-09-15T10:30:00",
+                    }
+                ],
+                "total": 250,
+                "page": 1,
+                "limit": 20,
+                "pages": 13,
+            }
+        },
+    )
 
 
 class RegionStatistics(BaseModel):
@@ -199,7 +300,17 @@ class RegionStatistics(BaseModel):
     total_population: int = Field(..., ge=0)
     total_area: float = Field(..., ge=0)
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "region": "Americas",
+                "total_countries": 35,
+                "total_population": 1023456789,
+                "total_area": 42165000.0,
+            }
+        },
+    )
 
 
 class GlobalStatistics(BaseModel):
@@ -212,7 +323,32 @@ class GlobalStatistics(BaseModel):
     average_area: float = Field(..., ge=0)
     regions: List[RegionStatistics] = Field(default_factory=list)
 
-    model_config = ConfigDict(str_strip_whitespace=True)
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        json_schema_extra={
+            "example": {
+                "total_countries": 250,
+                "total_population": 8000000000,
+                "total_area": 510000000.0,
+                "average_population": 32000000.0,
+                "average_area": 2040000.0,
+                "regions": [
+                    {
+                        "region": "Americas",
+                        "total_countries": 35,
+                        "total_population": 1023456789,
+                        "total_area": 42165000.0,
+                    },
+                    {
+                        "region": "Europe",
+                        "total_countries": 50,
+                        "total_population": 750000000,
+                        "total_area": 10500000.0,
+                    },
+                ],
+            }
+        },
+    )
 
 
 class HealthCheckResponse(BaseModel):
@@ -222,7 +358,16 @@ class HealthCheckResponse(BaseModel):
     version: str = Field(..., pattern=r"^\d+\.\d+\.\d+$")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
-    model_config = ConfigDict(str_strip_whitespace=True)
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        json_schema_extra={
+            "example": {
+                "status": "ok",
+                "version": "1.0.0",
+                "timestamp": "2026-09-15T10:30:00",
+            }
+        },
+    )
 
 
 class ErrorResponse(BaseModel):
@@ -232,7 +377,16 @@ class ErrorResponse(BaseModel):
     error_code: Optional[str] = Field(None)
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
-    model_config = ConfigDict(str_strip_whitespace=True)
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        json_schema_extra={
+            "example": {
+                "detail": "Country not found",
+                "error_code": "RECORD_NOT_FOUND",
+                "timestamp": "2026-09-15T10:30:00",
+            }
+        },
+    )
 
 
 class SyncLogResponse(BaseModel):
@@ -246,4 +400,17 @@ class SyncLogResponse(BaseModel):
     countries_skipped: int = Field(..., ge=0)
     message: Optional[str] = Field(None)
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "sync_id": "sync_a1b2c3d4e5f6",
+                "status": "success",
+                "timestamp": "2026-09-15T10:30:00",
+                "countries_inserted": 50,
+                "countries_updated": 200,
+                "countries_skipped": 0,
+                "message": "Successfully synchronized 250 countries from REST Countries API",
+            }
+        },
+    )
