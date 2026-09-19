@@ -26,6 +26,30 @@ Desenvolver API RESTful com arquitetura em 4 camadas que consome dados da REST C
 
 ---
 
+## 📸 Screenshots
+
+### Dashboard - Tela Principal com KPIs
+![Dashboard KPIs](screenshots/img_1.png)
+*KPIs com total de países, população global, região mais populosa e maior país por área*
+
+### Tabela Interativa de Países
+![Tabela de Países](screenshots/img_2.png)
+*Tabela com 7 colunas (Flag, Nome, População, Área, Região, Densidade, Ações), paginação e busca*
+
+### Gráficos de Top 10
+![Top 10 por População e Área](screenshots/img_3.png)
+*Gráficos de barras mostrando Top 10 países por população e Top 10 por área*
+
+### Distribuição Regional
+![Pizza Charts - Distribuição](screenshots/img_4.png)
+*Distribuição de população por região (%) e distribuição de quantidade de países por região*
+
+### Detalhes Expandidos do País
+![Detalhes Expandidos](screenshots/img_5.png)
+*Informações completas com Identificação, Geografia, Moedas, Idiomas e Fusos Horários*
+
+---
+
 ## 🏗️ Arquitetura
 
 ```
@@ -433,33 +457,6 @@ Patch 6: Move conversions
 # Total: -200 linhas de código, +20% maintainability
 ```
 
-### Sprint 2 (25/09 - 01/10) - API Integration
-```bash
-# Fix httpx/starlette version conflict
-pip install --upgrade httpx starlette fastapi
-
-# Run API endpoint tests (14 testes)
-pytest tests/integration/test_api_endpoints.py -v
-
-# Validar status codes (201, 200, 204, 404, 409, 422)
-```
-
-### Sprint 3 (02/10 - 08/10) - Staging Deployment
-```bash
-# Deploy em staging
-docker build -t rest-countries-api:0.1 .
-docker run -p 8000:8000 rest-countries-api:0.1
-
-# Load testing
-locust -f tests/load/locustfile.py --host=http://localhost:8000
-
-# Final validation
-- 48 tests pass ✅
-- Health check responds ✅
-- All endpoints work ✅
-```
-
----
 
 ## 📚 Documentação
 
@@ -481,9 +478,8 @@ locust -f tests/load/locustfile.py --host=http://localhost:8000
 | Versão | Status | Timeline | Entregas | Test Coverage |
 |--------|--------|----------|----------|---------------|
 | **0.1** | 🟢 **READY** | 14-17/09 | 4 camadas, 14 endpoints, 48 testes críticos | 100% |
-| **0.2** | 🟡 Planejado | 18-30/09 | Refatoração code quality, testes API, deploy staging | +14 testes |
-| **0.3** | 📋 Backlog | Outubro | Dashboard Streamlit, load testing, optimização | +20 testes |
-| **1.0** | 📋 Backlog | Novembro | Auth, séries temporais, alertas, analytics | +50 testes |
+| **0.2** | 🟡 Planejado | ND | Atividades prox. módulo do curso | ND |
+
 
 ---
 
@@ -568,4 +564,4 @@ chore: build, deps, etc
 
 **Última atualização:** 19/09/2026  
 **Versão atual:** 0.1 (Production Ready)  
-**Próximo Release:** 0.2 (25/09/2026)
+**Próximo Release:** 0.2 (Próximo módulo do curso)
