@@ -86,9 +86,11 @@ class BatchProcessError(ApplicationError):
         total: int,
         successful: int,
         failed: int,
-        errors: list[dict] | None = None,
+        errors: list[dict[str, str]] | None = None,
     ):
-        message = f"Batch operation failed: {successful}/{total} succeeded, {failed} failed"
+        message = (
+            f"Batch operation failed: {successful}/{total} succeeded, {failed} failed"
+        )
         super().__init__(message, "BATCH_ERROR")
         self.total = total
         self.successful = successful
@@ -103,7 +105,9 @@ class ExternalAPIError(ApplicationError):
         REST Countries API is unavailable or returns error.
     """
 
-    def __init__(self, api_name: str, status_code: int | None = None, details: str | None = None):
+    def __init__(
+        self, api_name: str, status_code: int | None = None, details: str | None = None
+    ):
         message = f"External API error: {api_name}"
         if status_code:
             message += f" (Status: {status_code})"
@@ -119,7 +123,9 @@ class ConfigurationError(ApplicationError):
         DATABASE_URL environment variable not set.
     """
 
-    def __init__(self, config_key: str, message: str = "Configuration missing or invalid"):
+    def __init__(
+        self, config_key: str, message: str = "Configuration missing or invalid"
+    ):
         full_message = f"Configuration error: {config_key} - {message}"
         super().__init__(full_message, "CONFIG_ERROR")
 

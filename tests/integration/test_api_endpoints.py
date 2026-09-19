@@ -48,10 +48,12 @@ class TestAPIEndpoints:
     @pytest.fixture
     def client(self, session: Session):
         """Create TestClient with isolated database session."""
+
         def override_get_db():
             yield session
 
         from app.database.connection import get_db_session
+
         app.dependency_overrides[get_db_session] = override_get_db
 
         test_client = TestClient(app)
@@ -332,31 +334,35 @@ class TestAPIEndpoints:
     # ========================================================================
 
     def test_post_sync_batch_200(self, client: TestClient):
-        """Verify POST /api/v1/sync returns 200 OK.
+        """Verify POST /api/v1/sync returns 200 OK and real sync statistics.
 
-        Business rule: Batch sync returns 200 with sync result.
-        Expected: Status 200, sync statistics included.
-        Why: Validates batch ingestion endpoint.
+        Business rule: Sync runs the real ingestion pipeline and reports
+        its outcome (not a hardcoded placeholder).
+        Expected: Status 200, sync statistics reflect the pipeline result.
+        Why: Validates the endpoint is actually wired to ingest_countries()
+        rather than the old always-zero placeholder response. The pipeline
+        itself (fetch->normalize->persist) is covered end to end elsewhere
+        (tests/integration/test_e2e_pipeline.py); here fetch_countries is
+        mocked so this test stays fast and network-free.
         """
-        payload = [
-            {
-                "name_common": f"Country {i}",
-                "name_official": f"Official {i}",
-                "iso_code_2": f"{'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i % 26]}{'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[(i // 26) % 26]}",
-                "iso_code_3": f"{'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i % 26]}{'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[(i // 26) % 26]}{'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[(i // 52) % 26]}",
-                "region": ["Africa", "Americas", "Asia", "Europe", "Oceania"][
-                    i % 5
-                ],
-                "population": 1000000 + i,
-            }
-            for i in range(10)  # Small batch to avoid timeout
-        ]
+        from unittest.mock import patch
 
-        response = client.post("/api/v1/sync", json=payload)
+        raw_country = {
+            "names": {"common": "Testland", "official": "Republic of Testland"},
+            "codes": {"alpha_2": "TL", "alpha_3": "TLD"},
+            "region": "Europe",
+            "population": 1000,
+        }
+
+        with patch("app.scripts.ingest.fetch_countries", return_value=[raw_country]):
+            response = client.post("/api/v1/sync")
 
         assert response.status_code == 200
         data = response.json()
-        assert "sync_id" in data or "status" in data
+        assert data["status"] == "success"
+        assert data["countries_inserted"] == 1
+        assert data["countries_updated"] == 0
+        assert "sync_id" in data
 
     # ========================================================================
     # Response Headers and Content-Type

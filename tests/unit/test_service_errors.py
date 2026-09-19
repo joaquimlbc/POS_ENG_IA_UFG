@@ -6,9 +6,7 @@ Tests that service layer correctly translates database errors to domain exceptio
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
 
-from app.database.repository import CountryRepository
 from app.models.task import CountryCreate
 from app.service.country_service import CountryService
 from app.utils.errors import (
@@ -51,9 +49,7 @@ class TestServiceErrorHandling:
         assert "iso_code_2" in error.message.lower()
         assert sample_country.iso_code_2 in error.message
 
-    def test_service_record_not_found_on_get(
-        self, service: CountryService
-    ) -> None:
+    def test_service_record_not_found_on_get(self, service: CountryService) -> None:
         """Verify service raises RecordNotFoundError for missing country.
 
         Business rule: Service must raise domain exception for missing records.
@@ -103,9 +99,7 @@ class TestServiceErrorHandling:
         assert "batch_size" in error.message.lower()
         assert "1000" in str(error.message)
 
-    def test_service_handles_update_not_found(
-        self, service: CountryService
-    ) -> None:
+    def test_service_handles_update_not_found(self, service: CountryService) -> None:
         """Verify service raises RecordNotFoundError on update of missing country.
 
         Business rule: Update operations must fail gracefully for missing records.
@@ -181,9 +175,7 @@ class TestServiceErrorHandling:
                 population=100000,
             )
 
-    def test_service_population_range_validation(
-        self, service: CountryService
-    ) -> None:
+    def test_service_population_range_validation(self, service: CountryService) -> None:
         """Verify population range is validated at service boundary.
 
         Business rule: Population must be between 0 and 2 billion.

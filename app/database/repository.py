@@ -4,21 +4,14 @@ Provides abstraction for database operations with CRUD operations,
 batch processing, and error handling for Country and related entities.
 """
 
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
-from sqlalchemy import func, select
+from sqlalchemy import ColumnElement, func
 from sqlalchemy.exc import IntegrityError as SQLAlchemyIntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import InstrumentedAttribute, Query, Session
 
 from app.database.models import Country, Currency, Language, Timezone
-from app.models.task import (
-    CountryCreate,
-    CountryUpdate,
-    CurrencyCreate,
-    LanguageCreate,
-    RegionStatistics,
-    TimezoneCreate,
-)
+from app.models.task import CountryCreate, CountryUpdate, RegionStatistics
 from app.utils.errors import (
     BatchProcessError,
     DuplicateRecordError,
@@ -42,7 +35,7 @@ class CountryRepository:
         """
         self.session = session
 
-    def _base_query(self):
+    def _base_query(self) -> "Query[Country]":
         """Internal: Base query for all country queries.
 
         Returns:
@@ -50,7 +43,9 @@ class CountryRepository:
         """
         return self.session.query(Country)
 
-    def _get_single_by_field(self, field, value: str) -> Optional[Country]:
+    def _get_single_by_field(
+        self, field: InstrumentedAttribute[Any], value: Any
+    ) -> Optional[Country]:
         """Internal: Generic single record fetch (DRY pattern).
 
         Args:
@@ -64,7 +59,10 @@ class CountryRepository:
         return self._base_query().filter(field == filter_value).first()
 
     def _get_paginated_query(
-        self, filter_field=None, limit: int = 100, offset: int = 0
+        self,
+        filter_field: Optional[ColumnElement[bool]] = None,
+        limit: int = 100,
+        offset: int = 0,
     ) -> List[Country]:
         """Internal: Generic paginated query builder (DRY pattern).
 
@@ -99,12 +97,16 @@ class CountryRepository:
             self.session.add(country)
             self.session.commit()
             self.session.refresh(country)
-            logger.info(f"Country created: {country.name_common} ({country.iso_code_2})")
+            logger.info(
+                f"Country created: {country.name_common} ({country.iso_code_2})"
+            )
             return country
         except SQLAlchemyIntegrityError as e:
             self.session.rollback()
             if "UNIQUE constraint failed" in str(e) or "unique" in str(e).lower():
-                raise DuplicateRecordError("Country", "name_common", country_data.name_common)
+                raise DuplicateRecordError(
+                    "Country", "name_common", country_data.name_common
+                )
             raise IntegrityError("Failed to create country", str(e))
 
     def get_by_id(self, country_id: int) -> Optional[Country]:
@@ -152,7 +154,9 @@ class CountryRepository:
         """
         return self._get_paginated_query(limit=limit, offset=offset)
 
-    def get_by_region(self, region: str, limit: int = 100, offset: int = 0) -> List[Country]:
+    def get_by_region(
+        self, region: str, limit: int = 100, offset: int = 0
+    ) -> List[Country]:
         """Get countries by region with pagination.
 
         Args:
@@ -171,7 +175,7 @@ class CountryRepository:
 
     def get_paginated(
         self, page: int = 1, limit: int = 20, region: Optional[str] = None
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Get paginated list of countries (raw data, no Pydantic conversion).
 
         Args:
@@ -190,7 +194,9 @@ class CountryRepository:
         total = query.count()
         offset = (page - 1) * limit
 
-        countries = query.order_by(Country.name_common).limit(limit).offset(offset).all()
+        countries = (
+            query.order_by(Country.name_common).limit(limit).offset(offset).all()
+        )
 
         return {
             "countries": countries,
@@ -299,10 +305,14 @@ class CountryRepository:
         try:
             for country_data in countries_data:
                 try:
-                    existing = self.session.query(Country).filter(
-                        (Country.iso_code_2 == country_data.iso_code_2)
-                        | (Country.iso_code_3 == country_data.iso_code_3)
-                    ).first()
+                    existing = (
+                        self.session.query(Country)
+                        .filter(
+                            (Country.iso_code_2 == country_data.iso_code_2)
+                            | (Country.iso_code_3 == country_data.iso_code_3)
+                        )
+                        .first()
+                    )
 
                     if existing:
                         # Update existing
@@ -317,10 +327,12 @@ class CountryRepository:
 
                 except Exception as e:
                     failed += 1
-                    errors.append({
-                        "country": country_data.name_common,
-                        "error": str(e),
-                    })
+                    errors.append(
+                        {
+                            "country": country_data.name_common,
+                            "error": str(e),
+                        }
+                    )
                     logger.warning(
                         f"Failed to upsert country {country_data.name_common}: {e}"
                     )
@@ -352,6 +364,124 @@ class CountryRepository:
                 errors=errors or [{"error": str(e)}],
             )
 
+    def upsert_with_relations(self, countries: List[Country]) -> Tuple[int, int, int]:
+        """Batch insert or update countries built from ORM instances.
+
+        Unlike ``upsert_batch``, this accepts fully-built ``Country`` ORM
+        objects (as produced by the ingestion pipeline) with ``languages``,
+        ``currencies`` and ``timezones`` relationships already attached.
+        Existing countries are matched by ISO2/ISO3 code; their scalar
+        fields are updated and their related collections are replaced
+        (relying on ``cascade="all, delete-orphan"`` to clean up old rows).
+
+        Args:
+            countries: List of transient ``Country`` ORM instances
+
+        Returns:
+            Tuple of (total, inserted, updated) counts
+
+        Raises:
+            BatchProcessError: If the batch operation fails
+        """
+        inserted = 0
+        updated = 0
+        failed = 0
+        errors = []
+
+        scalar_fields = (
+            "name_common",
+            "name_official",
+            "iso_code_2",
+            "iso_code_3",
+            "region",
+            "subregion",
+            "population",
+            "area",
+            "latitude",
+            "longitude",
+        )
+
+        try:
+            for country in countries:
+                try:
+                    existing = (
+                        self.session.query(Country)
+                        .filter(
+                            (Country.iso_code_2 == country.iso_code_2)
+                            | (Country.iso_code_3 == country.iso_code_3)
+                        )
+                        .first()
+                    )
+
+                    if existing:
+                        for field in scalar_fields:
+                            setattr(existing, field, getattr(country, field))
+                        # Rebuild related rows as fresh instances rather than
+                        # reassigning `country`'s own children: reusing them
+                        # would cascade the (never-added) transient `country`
+                        # parent into the session via its back_populates link.
+                        existing.languages = [
+                            Language(
+                                language_code=lang.language_code,
+                                language_name=lang.language_name,
+                            )
+                            for lang in country.languages
+                        ]
+                        existing.currencies = [
+                            Currency(
+                                currency_code=curr.currency_code,
+                                currency_name=curr.currency_name,
+                            )
+                            for curr in country.currencies
+                        ]
+                        existing.timezones = [
+                            Timezone(timezone_name=tz.timezone_name)
+                            for tz in country.timezones
+                        ]
+                        updated += 1
+                    else:
+                        self.session.add(country)
+                        inserted += 1
+
+                except Exception as e:
+                    failed += 1
+                    errors.append(
+                        {
+                            "country": country.name_common,
+                            "error": str(e),
+                        }
+                    )
+                    logger.warning(
+                        f"Failed to upsert country {country.name_common}: {e}"
+                    )
+
+            self.session.commit()
+            logger.info(
+                f"Batch upsert (with relations) completed: {inserted} inserted, "
+                f"{updated} updated, {failed} failed out of {len(countries)}"
+            )
+
+            if failed > 0:
+                raise BatchProcessError(
+                    total=len(countries),
+                    successful=inserted + updated,
+                    failed=failed,
+                    errors=errors,
+                )
+
+            return len(countries), inserted, updated
+
+        except BatchProcessError:
+            raise
+        except Exception as e:
+            self.session.rollback()
+            raise BatchProcessError(
+                total=len(countries),
+                successful=inserted + updated,
+                failed=failed or 1,
+                errors=errors or [{"error": str(e)}],
+            )
+
 
 class StatisticsRepository:
     """Repository for statistics and aggregations."""
@@ -359,14 +489,16 @@ class StatisticsRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def get_global_stats(self) -> dict:
+    def get_global_stats(self) -> dict[str, Any]:
         """Get global statistics across all countries.
 
         Returns:
             Dictionary with global stats
         """
         total_countries: int = self.session.query(func.count(Country.id)).scalar() or 0
-        total_population: int = self.session.query(func.sum(Country.population)).scalar() or 0
+        total_population: int = (
+            self.session.query(func.sum(Country.population)).scalar() or 0
+        )
         total_area: float = self.session.query(func.sum(Country.area)).scalar() or 0.0
 
         avg_population: float = 0.0
@@ -389,12 +521,16 @@ class StatisticsRepository:
         Returns:
             List of RegionStatistics
         """
-        result = self.session.query(
-            Country.region,
-            func.count(Country.id).label("total_countries"),
-            func.sum(Country.population).label("total_population"),
-            func.sum(Country.area).label("total_area"),
-        ).group_by(Country.region).all()
+        result = (
+            self.session.query(
+                Country.region,
+                func.count(Country.id).label("total_countries"),
+                func.sum(Country.population).label("total_population"),
+                func.sum(Country.area).label("total_area"),
+            )
+            .group_by(Country.region)
+            .all()
+        )
 
         return [
             RegionStatistics(

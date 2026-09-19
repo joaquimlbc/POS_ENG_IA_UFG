@@ -6,7 +6,7 @@ Tests cover model instantiation, relationships, constraints, and database intera
 from datetime import datetime
 
 import pytest
-from sqlalchemy import Column, String, create_engine, inspect, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.database.models import Base, Country, Currency, Language, Timezone
@@ -22,7 +22,9 @@ def test_db_session():
     test_engine = create_engine("sqlite:///:memory:", echo=False)
     Base.metadata.create_all(bind=test_engine)
 
-    TestSessionLocal = sessionmaker(bind=test_engine, class_=Session, expire_on_commit=False)
+    TestSessionLocal = sessionmaker(
+        bind=test_engine, class_=Session, expire_on_commit=False
+    )
     session = TestSessionLocal()
 
     yield session
@@ -166,7 +168,9 @@ class TestCountryModel:
             "idx_region_subregion",
         }
 
-        assert expected_indexes.issubset(index_names), f"Missing indexes: {expected_indexes - index_names}"
+        assert expected_indexes.issubset(
+            index_names
+        ), f"Missing indexes: {expected_indexes - index_names}"
 
     def test_country_timestamps(self, test_db_session: Session):
         """Should automatically manage created_at and updated_at."""
@@ -242,8 +246,12 @@ class TestLanguageModel:
         test_db_session.add(country)
         test_db_session.flush()
 
-        lang1 = Language(country_id=country.id, language_code="por", language_name="Portuguese")
-        lang2 = Language(country_id=country.id, language_code="eng", language_name="English")
+        lang1 = Language(
+            country_id=country.id, language_code="por", language_name="Portuguese"
+        )
+        lang2 = Language(
+            country_id=country.id, language_code="eng", language_name="English"
+        )
 
         test_db_session.add(lang1)
         test_db_session.add(lang2)
@@ -251,8 +259,8 @@ class TestLanguageModel:
 
         # Verify relationship from Country side
         assert len(country.languages) == 2
-        assert any(l.language_code == "por" for l in country.languages)
-        assert any(l.language_code == "eng" for l in country.languages)
+        assert any(lang.language_code == "por" for lang in country.languages)
+        assert any(lang.language_code == "eng" for lang in country.languages)
 
     def test_language_cascade_delete(self, test_db_session: Session):
         """Should cascade delete languages when country is deleted."""
@@ -281,7 +289,9 @@ class TestLanguageModel:
         test_db_session.commit()
 
         # Language should also be deleted
-        deleted_language = test_db_session.query(Language).filter(Language.id == language_id).first()
+        deleted_language = (
+            test_db_session.query(Language).filter(Language.id == language_id).first()
+        )
         assert deleted_language is None
 
     def test_language_repr(self, test_db_session: Session):
@@ -336,8 +346,12 @@ class TestCurrencyModel:
         test_db_session.add(country)
         test_db_session.flush()
 
-        curr1 = Currency(country_id=country.id, currency_code="BRL", currency_name="Brazilian Real")
-        curr2 = Currency(country_id=country.id, currency_code="USD", currency_name="US Dollar")
+        curr1 = Currency(
+            country_id=country.id, currency_code="BRL", currency_name="Brazilian Real"
+        )
+        curr2 = Currency(
+            country_id=country.id, currency_code="USD", currency_name="US Dollar"
+        )
 
         test_db_session.add(curr1)
         test_db_session.add(curr2)
@@ -372,7 +386,9 @@ class TestCurrencyModel:
         test_db_session.delete(country)
         test_db_session.commit()
 
-        deleted_currency = test_db_session.query(Currency).filter(Currency.id == currency_id).first()
+        deleted_currency = (
+            test_db_session.query(Currency).filter(Currency.id == currency_id).first()
+        )
         assert deleted_currency is None
 
     def test_currency_repr(self, test_db_session: Session):
@@ -460,7 +476,9 @@ class TestTimezoneModel:
         test_db_session.delete(country)
         test_db_session.commit()
 
-        deleted_timezone = test_db_session.query(Timezone).filter(Timezone.id == timezone_id).first()
+        deleted_timezone = (
+            test_db_session.query(Timezone).filter(Timezone.id == timezone_id).first()
+        )
         assert deleted_timezone is None
 
     def test_timezone_repr(self, test_db_session: Session):
@@ -537,7 +555,9 @@ class TestCompleteCountryWithRelationships:
         test_db_session.commit()
 
         # Query back
-        queried = test_db_session.query(Country).filter(Country.iso_code_2 == "FR").first()
+        queried = (
+            test_db_session.query(Country).filter(Country.iso_code_2 == "FR").first()
+        )
 
         assert queried is not None
         assert queried.name_common == "France"

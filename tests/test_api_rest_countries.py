@@ -1,14 +1,13 @@
-"""Unit tests for REST Countries API client.
+"""Unit tests for REST Countries API v5 client.
 
 Tests cover:
-- Fetching country data with retry logic
+- Fetching country data with retry logic, pagination, and API key auth
 - Timeout and error handling
 - Data normalization and validation
 - Logging behavior
 """
 
-import json
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
@@ -18,36 +17,55 @@ from app.api.rest_countries import (
     fetch_countries,
     normalize_countries,
 )
+from app.utils.errors import ConfigurationError
+
+TEST_API_KEY = "test_api_key"
+
+
+def _api_page(
+    objects: list[dict], more: bool = False, total: int | None = None
+) -> dict:
+    """Build a v5 API page envelope around a list of raw country objects."""
+    return {
+        "data": {
+            "objects": objects,
+            "meta": {
+                "total": total if total is not None else len(objects),
+                "count": len(objects),
+                "limit": 100,
+                "offset": 0,
+                "more": more,
+            },
+        }
+    }
 
 
 @pytest.fixture
 def sample_api_response():
-    """Sample API response with minimal country data."""
+    """Sample v5 API country objects with minimal data."""
     return [
         {
-            "name": {"common": "Brazil", "official": "Federative Republic of Brazil"},
-            "cca2": "BR",
-            "cca3": "BRA",
+            "names": {"common": "Brazil", "official": "Federative Republic of Brazil"},
+            "codes": {"alpha_2": "BR", "alpha_3": "BRA"},
             "region": "Americas",
             "subregion": "South America",
             "population": 215313498,
-            "area": 8514877.0,
-            "latlng": [-15.793889, -47.882778],
-            "languages": {"por": "Portuguese"},
-            "currencies": {"BRL": {"name": "Brazilian real", "symbol": "R$"}},
+            "area": {"kilometers": 8514877.0},
+            "coordinates": {"lat": -15.793889, "lng": -47.882778},
+            "languages": [{"name": "Portuguese"}],
+            "currencies": [{"code": "BRL", "name": "Brazilian real", "symbol": "R$"}],
             "timezones": ["UTC-03:00"],
         },
         {
-            "name": {"common": "France", "official": "French Republic"},
-            "cca2": "FR",
-            "cca3": "FRA",
+            "names": {"common": "France", "official": "French Republic"},
+            "codes": {"alpha_2": "FR", "alpha_3": "FRA"},
             "region": "Europe",
             "subregion": "Western Europe",
             "population": 67750000,
-            "area": 551695.0,
-            "latlng": [46.227638, 2.213749],
-            "languages": {"fra": "French"},
-            "currencies": {"EUR": {"name": "Euro", "symbol": "€"}},
+            "area": {"kilometers": 551695.0},
+            "coordinates": {"lat": 46.227638, "lng": 2.213749},
+            "languages": [{"name": "French"}],
+            "currencies": [{"code": "EUR", "name": "Euro", "symbol": "€"}],
             "timezones": ["UTC+01:00"],
         },
     ]
@@ -58,9 +76,9 @@ def sample_malformed_response():
     """API response with missing/invalid data."""
     return [
         {
-            "name": {"common": "Invalid"},
-            # Missing required fields
-            "cca2": "XX",
+            "names": {"common": "Invalid"},
+            # Missing required fields (official name, codes, population, region)
+            "codes": {"alpha_2": "XX"},
             "region": "Test",
         }
     ]
@@ -74,34 +92,94 @@ class TestFetchCountries:
         with patch("app.api.rest_countries.requests.Session") as mock_session_class:
             mock_session = MagicMock()
             mock_response = MagicMock()
-            mock_response.json.return_value = sample_api_response
+            mock_response.json.return_value = _api_page(sample_api_response)
             mock_response.status_code = 200
             mock_session.get.return_value = mock_response
             mock_session_class.return_value = mock_session
 
-            result = fetch_countries()
+            result = fetch_countries(api_key=TEST_API_KEY)
 
             assert len(result) == 2
-            assert result[0]["name"]["common"] == "Brazil"
-            assert result[1]["cca2"] == "FR"
+            assert result[0]["names"]["common"] == "Brazil"
+            assert result[1]["codes"]["alpha_2"] == "FR"
             mock_session.get.assert_called_once()
             mock_session.close.assert_called_once()
+
+    def test_fetch_countries_sends_bearer_token(self, sample_api_response):
+        """Should authenticate with a Bearer token from the given API key."""
+        with patch("app.api.rest_countries.requests.Session") as mock_session_class:
+            mock_session = MagicMock()
+            mock_response = MagicMock()
+            mock_response.json.return_value = _api_page(sample_api_response)
+            mock_session.get.return_value = mock_response
+            mock_session_class.return_value = mock_session
+
+            fetch_countries(api_key=TEST_API_KEY)
+
+            call_kwargs = mock_session.get.call_args[1]
+            assert call_kwargs["headers"]["Authorization"] == f"Bearer {TEST_API_KEY}"
+
+    def test_fetch_countries_requires_api_key(self, monkeypatch):
+        """Should raise ConfigurationError when no API key is available."""
+        monkeypatch.delenv("REST_COUNTRIES_API_KEY", raising=False)
+
+        with pytest.raises(ConfigurationError):
+            fetch_countries()
+
+    def test_fetch_countries_uses_env_api_key(self, sample_api_response, monkeypatch):
+        """Should fall back to the REST_COUNTRIES_API_KEY environment variable."""
+        monkeypatch.setenv("REST_COUNTRIES_API_KEY", "env_key")
+
+        with patch("app.api.rest_countries.requests.Session") as mock_session_class:
+            mock_session = MagicMock()
+            mock_response = MagicMock()
+            mock_response.json.return_value = _api_page(sample_api_response)
+            mock_session.get.return_value = mock_response
+            mock_session_class.return_value = mock_session
+
+            fetch_countries()
+
+            call_kwargs = mock_session.get.call_args[1]
+            assert call_kwargs["headers"]["Authorization"] == "Bearer env_key"
 
     def test_fetch_countries_with_custom_timeout(self, sample_api_response):
         """Should use custom timeout when provided."""
         with patch("app.api.rest_countries.requests.Session") as mock_session_class:
             mock_session = MagicMock()
             mock_response = MagicMock()
-            mock_response.json.return_value = sample_api_response
-            mock_response.status_code = 200
+            mock_response.json.return_value = _api_page(sample_api_response)
             mock_session.get.return_value = mock_response
             mock_session_class.return_value = mock_session
 
-            fetch_countries(timeout=60)
+            fetch_countries(timeout=60, api_key=TEST_API_KEY)
 
             mock_session.get.assert_called_once()
             call_args = mock_session.get.call_args
             assert call_args[1]["timeout"] == 60
+
+    def test_fetch_countries_paginates_until_exhausted(self, sample_api_response):
+        """Should follow pagination (meta.more) until all pages are fetched."""
+        with patch("app.api.rest_countries.requests.Session") as mock_session_class:
+            mock_session = MagicMock()
+            page1 = MagicMock()
+            page1.json.return_value = _api_page(
+                [sample_api_response[0]], more=True, total=2
+            )
+            page2 = MagicMock()
+            page2.json.return_value = _api_page(
+                [sample_api_response[1]], more=False, total=2
+            )
+            mock_session.get.side_effect = [page1, page2]
+            mock_session_class.return_value = mock_session
+
+            result = fetch_countries(api_key=TEST_API_KEY, page_limit=1)
+
+            assert len(result) == 2
+            assert mock_session.get.call_count == 2
+            first_call_params = mock_session.get.call_args_list[0][1]["params"]
+            second_call_params = mock_session.get.call_args_list[1][1]["params"]
+            assert first_call_params["offset"] == 0
+            assert second_call_params["offset"] == 1
 
     def test_fetch_countries_timeout_error(self):
         """Should raise RequestException on timeout."""
@@ -111,7 +189,7 @@ class TestFetchCountries:
             mock_session_class.return_value = mock_session
 
             with pytest.raises(requests.Timeout):
-                fetch_countries()
+                fetch_countries(api_key=TEST_API_KEY)
 
             mock_session.close.assert_called_once()
 
@@ -127,7 +205,7 @@ class TestFetchCountries:
             mock_session_class.return_value = mock_session
 
             with pytest.raises(requests.HTTPError):
-                fetch_countries()
+                fetch_countries(api_key=TEST_API_KEY)
 
             mock_session.close.assert_called_once()
 
@@ -136,39 +214,55 @@ class TestFetchCountries:
         with patch("app.api.rest_countries.requests.Session") as mock_session_class:
             mock_session = MagicMock()
             mock_response = MagicMock()
-            mock_response.json.return_value = []
-            mock_response.status_code = 200
+            mock_response.json.return_value = _api_page([])
             mock_session.get.return_value = mock_response
             mock_session_class.return_value = mock_session
 
             with pytest.raises(ValueError):
-                fetch_countries()
+                fetch_countries(api_key=TEST_API_KEY)
 
     def test_fetch_countries_invalid_response_format(self):
-        """Should raise ValueError if response is not a list."""
+        """Should raise ValueError if response has no data.objects list."""
         with patch("app.api.rest_countries.requests.Session") as mock_session_class:
             mock_session = MagicMock()
             mock_response = MagicMock()
-            mock_response.json.return_value = {"error": "invalid"}
-            mock_response.status_code = 200
+            mock_response.json.return_value = {"data": {"meta": {}}}
             mock_session.get.return_value = mock_response
             mock_session_class.return_value = mock_session
 
             with pytest.raises(ValueError):
-                fetch_countries()
+                fetch_countries(api_key=TEST_API_KEY)
+
+    def test_fetch_countries_api_error_envelope(self):
+        """Should raise ValueError when the API reports a logical error.
+
+        Why: The REST Countries API returns HTTP 200 with an `errors` array
+        for cases like a deprecated endpoint or an over-quota request, so
+        that envelope must be treated as a failure, not a valid page.
+        """
+        with patch("app.api.rest_countries.requests.Session") as mock_session_class:
+            mock_session = MagicMock()
+            mock_response = MagicMock()
+            mock_response.json.return_value = {
+                "errors": [{"message": "This API version has been deprecated."}]
+            }
+            mock_session.get.return_value = mock_response
+            mock_session_class.return_value = mock_session
+
+            with pytest.raises(ValueError, match="deprecated"):
+                fetch_countries(api_key=TEST_API_KEY)
 
     def test_fetch_countries_retry_on_5xx(self, sample_api_response):
         """Should retry on 5xx errors (handled by Retry strategy)."""
         with patch("app.api.rest_countries.requests.Session") as mock_session_class:
             mock_session = MagicMock()
             mock_response = MagicMock()
-            mock_response.json.return_value = sample_api_response
-            mock_response.status_code = 200
+            mock_response.json.return_value = _api_page(sample_api_response)
             mock_session.get.return_value = mock_response
             mock_session_class.return_value = mock_session
 
             # Session creation should use retry strategy
-            result = fetch_countries()
+            result = fetch_countries(api_key=TEST_API_KEY)
             assert len(result) == 2
 
 
@@ -205,14 +299,13 @@ class TestNormalizeCountries:
         """Should handle countries with missing optional fields."""
         raw_data = [
             {
-                "name": {"common": "Test", "official": "Test Official"},
-                "cca2": "TS",
-                "cca3": "TST",
+                "names": {"common": "Test", "official": "Test Official"},
+                "codes": {"alpha_2": "TS", "alpha_3": "TST"},
                 "region": "Test Region",
                 "subregion": None,
                 "population": 1000,
                 "area": None,
-                "latlng": None,
+                "coordinates": None,
                 "languages": None,
                 "currencies": None,
                 "timezones": None,
@@ -243,8 +336,33 @@ class TestNormalizeCountries:
         """Should skip countries with missing required fields."""
         raw_data = [
             {
-                "name": {"common": "Invalid"},
-                # Missing cca2, cca3, region, population
+                "names": {"common": "Invalid"},
+                # Missing official name, codes, region, population
+            }
+        ]
+
+        normalized, errors = normalize_countries(raw_data)
+
+        assert len(normalized) == 0
+        assert len(errors) >= 1
+
+    def test_normalize_countries_skips_missing_iso_codes(self):
+        """Should skip territories without assigned ISO codes (e.g. disputed regions).
+
+        Why: The REST Countries API reports empty alpha_2/alpha_3 codes for
+        unrecognized territories (e.g. Northern Cyprus); persisting more than
+        one such record collides on the empty-string unique constraint, so
+        these must be treated as a normalization error instead.
+        """
+        raw_data = [
+            {
+                "names": {
+                    "common": "Northern Cyprus",
+                    "official": "Turkish Republic of Northern Cyprus",
+                },
+                "codes": {"alpha_2": "", "alpha_3": ""},
+                "region": "Europe",
+                "population": 382836,
             }
         ]
 
@@ -257,9 +375,8 @@ class TestNormalizeCountries:
         """Should skip countries without proper name."""
         raw_data = [
             {
-                "name": {"official": "Only Official"},  # Missing common name
-                "cca2": "XX",
-                "cca3": "XXX",
+                "names": {"official": "Only Official"},  # Missing common name
+                "codes": {"alpha_2": "XX", "alpha_3": "XXX"},
                 "region": "Test",
                 "population": 1000,
             }
@@ -273,7 +390,7 @@ class TestNormalizeCountries:
     def test_normalize_countries_partial_failure(self, sample_api_response):
         """Should normalize valid countries even if some fail."""
         mixed_data = sample_api_response + [
-            {"name": {}, "cca2": "INVALID"}  # Invalid record
+            {"names": {}, "codes": {"alpha_2": "INVALID"}}  # Invalid record
         ]
 
         normalized, errors = normalize_countries(mixed_data)
@@ -285,19 +402,15 @@ class TestNormalizeCountries:
         """Should properly extract languages and currencies."""
         raw_data = [
             {
-                "name": {"common": "Test", "official": "Test Official"},
-                "cca2": "TS",
-                "cca3": "TST",
+                "names": {"common": "Test", "official": "Test Official"},
+                "codes": {"alpha_2": "TS", "alpha_3": "TST"},
                 "region": "Test",
                 "population": 1000,
-                "languages": {
-                    "eng": "English",
-                    "spa": "Spanish",
-                },
-                "currencies": {
-                    "USD": {"name": "US Dollar"},
-                    "EUR": {"name": "Euro"},
-                },
+                "languages": [{"name": "English"}, {"name": "Spanish"}],
+                "currencies": [
+                    {"code": "USD", "name": "US Dollar"},
+                    {"code": "EUR", "name": "Euro"},
+                ],
             }
         ]
 
@@ -324,13 +437,12 @@ class TestIntegration:
         with patch("app.api.rest_countries.requests.Session") as mock_session_class:
             mock_session = MagicMock()
             mock_response = MagicMock()
-            mock_response.json.return_value = sample_api_response
-            mock_response.status_code = 200
+            mock_response.json.return_value = _api_page(sample_api_response)
             mock_session.get.return_value = mock_response
             mock_session_class.return_value = mock_session
 
             # Simulate complete pipeline
-            raw_data = fetch_countries()
+            raw_data = fetch_countries(api_key=TEST_API_KEY)
             normalized, errors = normalize_countries(raw_data)
 
             assert len(normalized) == 2
@@ -341,19 +453,17 @@ class TestIntegration:
         """Should handle various edge cases in data."""
         edge_cases = [
             {
-                "name": {"common": "Special Chars ñ", "official": "Official ñ"},
-                "cca2": "SC",
-                "cca3": "SPC",
+                "names": {"common": "Special Chars ñ", "official": "Official ñ"},
+                "codes": {"alpha_2": "SC", "alpha_3": "SPC"},
                 "region": "Test",
                 "population": 0,  # Edge case: zero population
             },
             {
-                "name": {"common": "Large Country", "official": "Very Large Country"},
-                "cca2": "LC",
-                "cca3": "LRG",
+                "names": {"common": "Large Country", "official": "Very Large Country"},
+                "codes": {"alpha_2": "LC", "alpha_3": "LRG"},
                 "region": "Test",
                 "population": 9999999999,  # Large number
-                "area": 99999999.99,
+                "area": {"kilometers": 99999999.99},
             },
         ]
 
@@ -368,9 +478,8 @@ class TestIntegration:
         """Should ignore extra fields not in schema."""
         raw_data = [
             {
-                "name": {"common": "Test", "official": "Test Official"},
-                "cca2": "TS",
-                "cca3": "TST",
+                "names": {"common": "Test", "official": "Test Official"},
+                "codes": {"alpha_2": "TS", "alpha_3": "TST"},
                 "region": "Test",
                 "population": 1000,
                 "extra_field_1": "should be ignored",

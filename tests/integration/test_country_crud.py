@@ -101,9 +101,7 @@ class TestCountryCRUD:
         assert country.currencies == []
         assert country.timezones == []
 
-    def test_update_country_success(
-        self, service_with_sample_country: CountryService
-    ):
+    def test_update_country_success(self, service_with_sample_country: CountryService):
         """Verify country update succeeds with valid data.
 
         Business rule: Mutable fields can be updated without affecting ISO codes.

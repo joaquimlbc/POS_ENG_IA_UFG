@@ -4,11 +4,10 @@ Tests cover engine creation, session management, connection pooling,
 foreign key constraints, and database initialization.
 """
 
-import os
 from pathlib import Path
 
 import pytest
-from sqlalchemy import Engine, event, inspect, text
+from sqlalchemy import Engine, inspect, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.database.connection import (
@@ -22,9 +21,8 @@ from app.database.connection import (
     engine,
     get_db_session,
     get_engine,
-    init_db,
 )
-from app.database.models import Base, Country, Currency, Language, Timezone
+from app.database.models import Base, Country, Language
 
 
 class TestDatabaseConfiguration:
@@ -140,7 +138,12 @@ class TestDatabaseInitialization:
         inspector = inspect(test_engine)
         tables = inspector.get_table_names()
 
-        expected_tables = {"countries", "country_languages", "country_currencies", "country_timezones"}
+        expected_tables = {
+            "countries",
+            "country_languages",
+            "country_currencies",
+            "country_timezones",
+        }
         assert expected_tables.issubset(set(tables))
 
         test_engine.dispose()
@@ -233,7 +236,9 @@ class TestForeignKeyConstraints:
         test_db_session.delete(country)
         test_db_session.commit()
 
-        deleted = test_db_session.query(Language).filter(Language.id == language_id).first()
+        deleted = (
+            test_db_session.query(Language).filter(Language.id == language_id).first()
+        )
         assert deleted is None
 
 
@@ -356,7 +361,9 @@ def test_db_session():
     test_engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(bind=test_engine)
 
-    TestSessionLocal = sessionmaker(bind=test_engine, class_=Session, expire_on_commit=False)
+    TestSessionLocal = sessionmaker(
+        bind=test_engine, class_=Session, expire_on_commit=False
+    )
     session = TestSessionLocal()
 
     yield session

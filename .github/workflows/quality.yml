@@ -1,0 +1,35 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements-test.txt
+
+      - name: Black (format check)
+        run: black --check app tests streamlit_app.py
+
+      - name: Flake8 (lint)
+        run: flake8 app tests streamlit_app.py
+
+      - name: mypy --strict (types)
+        run: mypy --strict app
+
+      - name: pytest (tests + coverage)
+        run: pytest -q --cov=app --cov-report=term-missing

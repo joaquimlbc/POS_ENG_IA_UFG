@@ -1,0 +1,7 @@
+[flake8]
+max-line-length = 100
+# E203 (whitespace before ':') is a false positive on Black-formatted slices;
+# Black and flake8 disagree here by design - this is Black's own documented
+# recommendation for flake8 interop.
+extend-ignore = E203
+exclude = .venv,.git,__pycache__,htmlcov,logs,data

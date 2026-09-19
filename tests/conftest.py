@@ -5,13 +5,58 @@ import tempfile
 from typing import Generator
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.database.models import Base
 from app.database.connection import get_db_session
+from app.main import app
 from app.models.task import CountryCreate
 from app.service.country_service import CountryService
+
+
+@pytest.fixture
+def in_memory_session() -> Generator[Session, None, None]:
+    """Create an isolated, fast SQLite in-memory session for a single test.
+
+    Unlike the file-backed `session` fixture above, this spins up a fresh
+    `:memory:` engine per test - no shared state, no disk I/O. Used by
+    integration tests that need real referential-integrity enforcement
+    (SQLite's `PRAGMA foreign_keys` and cascade behavior) without the cost
+    of a file-based database.
+    """
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        echo=False,
+    )
+    Base.metadata.create_all(engine)
+    connection = engine.connect()
+    transaction = connection.begin()
+    test_session = sessionmaker(bind=connection)()
+
+    yield test_session
+
+    test_session.close()
+    transaction.rollback()
+    connection.close()
+    engine.dispose()
+
+
+@pytest.fixture
+def api_client(in_memory_session: Session) -> Generator[TestClient, None, None]:
+    """FastAPI TestClient wired to an isolated in-memory database session."""
+
+    def override_get_db():
+        yield in_memory_session
+
+    app.dependency_overrides[get_db_session] = override_get_db
+    test_client = TestClient(app)
+
+    yield test_client
+
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture(scope="session")
@@ -116,9 +161,7 @@ def service_with_250_countries(service: CountryService) -> CountryService:
         iso2 = iso2_chars[i % 26] + iso2_chars[(i // 26) % 26]
         # Generate valid ISO3 codes (3 letters)
         iso3 = (
-            iso3_chars[i % 26]
-            + iso3_chars[(i // 26) % 26]
-            + iso3_chars[(i // 52) % 26]
+            iso3_chars[i % 26] + iso3_chars[(i // 26) % 26] + iso3_chars[(i // 52) % 26]
         )
 
         country = CountryCreate(

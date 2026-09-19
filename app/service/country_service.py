@@ -7,9 +7,10 @@ Architecture:
     API Layer (FastAPI) → Service Layer (business logic) → Repository Layer
 """
 
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -28,11 +29,7 @@ from app.models.task import (
     SyncLogResponse,
     TimezoneCreate,
 )
-from app.service.priority_advisor import (
-    DataQuality,
-    PriorityAdvisor,
-    SyncPriority,
-)
+from app.service.priority_advisor import PriorityAdvisor, SyncPriority
 from app.utils.errors import (
     BatchProcessError,
     DuplicateRecordError,
@@ -53,7 +50,7 @@ class CountrySyncResult:
     inserted: int
     updated: int
     failed: int
-    quality_summary: dict
+    quality_summary: dict[str, Any]
     status: str  # "success", "partial_failure", "failure"
     message: str
     started_at: datetime
@@ -125,7 +122,7 @@ class CountryService:
         self,
         country_id: int,
         entity_class: type,
-        items_data: List,
+        items_data: List[Any],
         entity_type: str,
     ) -> CountryDetailResponse:
         """Internal: Generic related entity adder (DRY pattern).
@@ -168,7 +165,7 @@ class CountryService:
         failed: int,
         message: str,
         started_at: datetime,
-        quality_summary: Optional[dict] = None,
+        quality_summary: Optional[dict[str, Any]] = None,
     ) -> CountrySyncResult:
         """Internal: Create sync result (DRY pattern).
 
@@ -402,21 +399,22 @@ class CountryService:
         if len(countries_data) > 1000:
             raise ValidationError(
                 "batch_size",
-                f"Batch size {len(countries_data)} exceeds maximum of 1000"
+                f"Batch size {len(countries_data)} exceeds maximum of 1000",
             )
 
-        sync_id = f"sync_{datetime.now(timezone.utc).timestamp()}"
+        # uuid4 suffix guarantees uniqueness even when two syncs start within
+        # the same clock tick (datetime.timestamp() resolution is coarse on
+        # some platforms and can collide under fast, back-to-back calls).
+        sync_id = (
+            f"sync_{datetime.now(timezone.utc).timestamp()}_{uuid.uuid4().hex[:8]}"
+        )
         started_at = datetime.now(timezone.utc)
 
-        logger.info(
-            f"Starting batch sync {sync_id}: {len(countries_data)} countries"
-        )
+        logger.info(f"Starting batch sync {sync_id}: {len(countries_data)} countries")
 
         try:
             # Perform upsert
-            total, inserted, updated = self.country_repo.upsert_batch(
-                countries_data
-            )
+            total, inserted, updated = self.country_repo.upsert_batch(countries_data)
 
             # Assess quality of synced data
             synced_countries = self.country_repo.get_all(limit=len(countries_data))
@@ -451,9 +449,7 @@ class CountryService:
                 started_at=started_at,
             )
 
-            logger.warning(
-                f"Batch sync {sync_id} partial failure: {result.message}"
-            )
+            logger.warning(f"Batch sync {sync_id} partial failure: {result.message}")
             return result
 
     def get_sync_result_response(
@@ -510,7 +506,7 @@ class CountryService:
         """
         return self.stats_repo.get_regional_stats()
 
-    def identify_data_gaps(self) -> dict:
+    def identify_data_gaps(self) -> dict[str, Any]:
         """Identify countries with data quality issues.
 
         Business logic:
@@ -552,9 +548,7 @@ class CountryService:
             },
         }
 
-        logger.info(
-            f"Data gap analysis: {len(prioritized)} countries need attention"
-        )
+        logger.info(f"Data gap analysis: {len(prioritized)} countries need attention")
 
         return report
 
@@ -573,9 +567,7 @@ class CountryService:
         Raises:
             RecordNotFoundError: If country not found
         """
-        return self._add_related_entities(
-            country_id, Language, languages, "languages"
-        )
+        return self._add_related_entities(country_id, Language, languages, "languages")
 
     def add_currencies(
         self, country_id: int, currencies: List[CurrencyCreate]
@@ -611,11 +603,9 @@ class CountryService:
         Raises:
             RecordNotFoundError: If country not found
         """
-        return self._add_related_entities(
-            country_id, Timezone, timezones, "timezones"
-        )
+        return self._add_related_entities(country_id, Timezone, timezones, "timezones")
 
-    def validate_country_integrity(self, country_id: int) -> dict:
+    def validate_country_integrity(self, country_id: int) -> dict[str, Any]:
         """Validate data integrity and quality of a country.
 
         Checks:

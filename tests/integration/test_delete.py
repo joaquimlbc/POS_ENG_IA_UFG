@@ -46,7 +46,9 @@ class TestCascadeDelete:
         """
         # Verify country has languages
         country_before = service_with_relationships.get_country(1)
-        assert len(country_before.languages) == 2, "Setup: country should have 2 languages"
+        assert (
+            len(country_before.languages) == 2
+        ), "Setup: country should have 2 languages"
 
         # Delete country
         service_with_relationships.delete_country(1)
@@ -66,7 +68,9 @@ class TestCascadeDelete:
         """
         # Verify country has currencies
         country_before = service_with_relationships.get_country(1)
-        assert len(country_before.currencies) == 1, "Setup: country should have 1 currency"
+        assert (
+            len(country_before.currencies) == 1
+        ), "Setup: country should have 1 currency"
 
         # Delete country
         service_with_relationships.delete_country(1)
@@ -86,7 +90,9 @@ class TestCascadeDelete:
         """
         # Verify country has timezones
         country_before = service_with_relationships.get_country(1)
-        assert len(country_before.timezones) == 1, "Setup: country should have 1 timezone"
+        assert (
+            len(country_before.timezones) == 1
+        ), "Setup: country should have 1 timezone"
 
         # Delete country
         service_with_relationships.delete_country(1)
@@ -118,9 +124,7 @@ class TestCascadeDelete:
         with pytest.raises(RecordNotFoundError):
             service_with_relationships.get_country(1)
 
-    def test_delete_nonexistent_country(
-        self, service: CountryService
-    ) -> None:
+    def test_delete_nonexistent_country(self, service: CountryService) -> None:
         """Verify deleting non-existent country returns False.
 
         Business rule: Deletion of non-existent country should not raise error.

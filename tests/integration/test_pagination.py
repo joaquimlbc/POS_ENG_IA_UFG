@@ -5,8 +5,6 @@ Test Suite: Pagination Correctness
 Tests data retrieval with pagination for dashboard operations.
 """
 
-import pytest
-
 from app.service.country_service import CountryService
 
 

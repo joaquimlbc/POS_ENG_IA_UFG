@@ -15,9 +15,7 @@ from app.utils.errors import ValidationError
 class TestCountrySync:
     """Test suite for batch synchronization operations."""
 
-    def test_sync_batch_250_countries_success(
-        self, service: CountryService
-    ) -> None:
+    def test_sync_batch_250_countries_success(self, service: CountryService) -> None:
         """Verify batch sync of 250 countries completes successfully.
 
         Business rule: Batch sync should upsert all records without errors.
@@ -96,9 +94,7 @@ class TestCountrySync:
         assert result.inserted == 1  # France
         assert result.updated == 1  # Brazil
 
-    def test_sync_batch_exceeds_limit_rejected(
-        self, service: CountryService
-    ) -> None:
+    def test_sync_batch_exceeds_limit_rejected(self, service: CountryService) -> None:
         """Verify batch size limit (1000) is enforced.
 
         Business rule: Batch must not exceed 1000 records to prevent memory issues.
@@ -134,9 +130,7 @@ class TestCountrySync:
         assert "batch_size" in str(exc_info.value).lower()
         assert "1000" in str(exc_info.value)
 
-    def test_sync_batch_exactly_1000_allowed(
-        self, service: CountryService
-    ) -> None:
+    def test_sync_batch_exactly_1000_allowed(self, service: CountryService) -> None:
         """Verify batch size limit of exactly 1000 is allowed.
 
         Business rule: Batch size limit is exactly 1000, not less.
@@ -184,9 +178,7 @@ class TestCountrySync:
         assert result.inserted == 0
         assert result.status == "success"
 
-    def test_sync_batch_generates_unique_sync_id(
-        self, service: CountryService
-    ) -> None:
+    def test_sync_batch_generates_unique_sync_id(self, service: CountryService) -> None:
         """Verify each sync operation gets unique sync_id.
 
         Business rule: Every sync must have unique ID for tracking.

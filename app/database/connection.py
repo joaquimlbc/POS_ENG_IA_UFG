@@ -5,7 +5,7 @@ with support for SQLite (MVP) and PostgreSQL (production migration path).
 """
 
 import os
-from typing import Generator
+from typing import Any, Generator
 
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
@@ -15,10 +15,7 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 
 # Database URL from environment or default SQLite
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "sqlite:///./data/countries.db"
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/countries.db")
 
 # Connection pool configuration
 POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "5"))
@@ -39,7 +36,7 @@ if DATABASE_URL.startswith("sqlite"):
 
     # Enable foreign key constraints for SQLite
     @event.listens_for(Engine, "connect")
-    def set_sqlite_pragma(dbapi_conn, connection_record):
+    def set_sqlite_pragma(dbapi_conn: Any, connection_record: Any) -> None:
         """Enable foreign key constraints in SQLite."""
         cursor = dbapi_conn.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
@@ -77,6 +74,7 @@ def init_db() -> None:
     """
     try:
         from app.database.models import Base
+
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables created successfully")
     except Exception as e:

@@ -6,14 +6,19 @@ definição de schemas, rotas de saúde, middleware e integração de todas as r
 """
 
 import os
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Optional
+from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.country_routes import router as country_router
+from app.scheduler import create_scheduler
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class HealthCheckResponse(BaseModel):
@@ -49,6 +54,26 @@ class HealthCheckResponse(BaseModel):
     )
 
 
+# Scheduler disabled by default in tests/CLI-only contexts via ENABLE_SCHEDULER=false.
+ENABLE_SCHEDULER = os.getenv("ENABLE_SCHEDULER", "true").lower() == "true"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Start/stop the daily sync scheduler alongside the app (US-012)."""
+    scheduler = None
+    if ENABLE_SCHEDULER:
+        scheduler = create_scheduler()
+        scheduler.start()
+        logger.info("Daily sync scheduler started (runs at 00:00 UTC)")
+
+    yield
+
+    if scheduler is not None:
+        scheduler.shutdown(wait=False)
+        logger.info("Daily sync scheduler stopped")
+
+
 app = FastAPI(
     title="REST Countries API",
     description="API RESTful para ingestão e consulta de dados de países",
@@ -56,11 +81,15 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    lifespan=lifespan,
 )
 
 # CORS: origens permitidas via variável de ambiente (lista separada por vírgula).
 # Default cobre os servidores de desenvolvimento local (FastAPI e futura dashboard Streamlit).
-_default_origins = "http://localhost:8000,http://localhost:8501,http://127.0.0.1:8000,http://127.0.0.1:8501"
+_default_origins = (
+    "http://localhost:8000,http://localhost:8501,"
+    "http://127.0.0.1:8000,http://127.0.0.1:8501"
+)
 CORS_ORIGINS = [
     origin.strip()
     for origin in os.getenv("CORS_ORIGINS", _default_origins).split(",")

@@ -273,8 +273,8 @@ US-006: Configuração de Banco de Dados SQLite ⏳
 
 -----------------------
 
-Prompt 26 - Implementar US-004
+Prompt 26 - Implementação
 
-Implementar US-004 - HTTP Client para REST Countries API (dados reais)
+Realizar implementação conforme planejamento Backlog e priorizações.
 
 -----------------------

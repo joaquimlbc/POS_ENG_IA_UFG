@@ -8,8 +8,13 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.api.rest_countries import NormalizedCountry, normalize_countries, transform_normalized_countries, transform_to_country_model
-from app.database.models import Base, Country, Currency, Language, Timezone
+from app.api.rest_countries import (
+    NormalizedCountry,
+    normalize_countries,
+    transform_normalized_countries,
+    transform_to_country_model,
+)
+from app.database.models import Base, Country
 
 
 @pytest.fixture(scope="function")
@@ -18,7 +23,9 @@ def test_db_session():
     test_engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(bind=test_engine)
 
-    TestSessionLocal = sessionmaker(bind=test_engine, class_=Session, expire_on_commit=False)
+    TestSessionLocal = sessionmaker(
+        bind=test_engine, class_=Session, expire_on_commit=False
+    )
     session = TestSessionLocal()
 
     yield session
@@ -202,27 +209,28 @@ class TestNormalizationAndTransformationPipeline:
         """Should complete full pipeline from raw data to model."""
         raw_data = [
             {
-                "name": {"common": "Brazil", "official": "Federative Republic of Brazil"},
-                "cca2": "BR",
-                "cca3": "BRA",
+                "names": {
+                    "common": "Brazil",
+                    "official": "Federative Republic of Brazil",
+                },
+                "codes": {"alpha_2": "BR", "alpha_3": "BRA"},
                 "region": "Americas",
                 "subregion": "South America",
                 "population": 215313498,
-                "area": 8514877.0,
-                "latlng": [-15.793889, -47.882778],
-                "languages": {"por": "Portuguese"},
-                "currencies": {"BRL": {"name": "Brazilian real"}},
+                "area": {"kilometers": 8514877.0},
+                "coordinates": {"lat": -15.793889, "lng": -47.882778},
+                "languages": [{"name": "Portuguese"}],
+                "currencies": [{"code": "BRL", "name": "Brazilian real"}],
                 "timezones": ["UTC-03:00"],
             },
             {
-                "name": {"common": "France", "official": "French Republic"},
-                "cca2": "FR",
-                "cca3": "FRA",
+                "names": {"common": "France", "official": "French Republic"},
+                "codes": {"alpha_2": "FR", "alpha_3": "FRA"},
                 "region": "Europe",
                 "population": 67750000,
-                "area": 551695.0,
-                "languages": {"fra": "French"},
-                "currencies": {"EUR": {"name": "Euro"}},
+                "area": {"kilometers": 551695.0},
+                "languages": [{"name": "French"}],
+                "currencies": [{"code": "EUR", "name": "Euro"}],
                 "timezones": ["UTC+01:00"],
             },
         ]
@@ -249,16 +257,15 @@ class TestNormalizationAndTransformationPipeline:
         """Should preserve all data through pipeline."""
         raw_data = [
             {
-                "name": {"common": "Portugal", "official": "Portuguese Republic"},
-                "cca2": "PT",
-                "cca3": "PRT",
+                "names": {"common": "Portugal", "official": "Portuguese Republic"},
+                "codes": {"alpha_2": "PT", "alpha_3": "PRT"},
                 "region": "Europe",
                 "subregion": "Southern Europe",
                 "population": 10305564,
-                "area": 92090.0,
-                "latlng": [39.399872, -8.224454],
-                "languages": {"por": "Portuguese"},
-                "currencies": {"EUR": {"name": "Euro"}},
+                "area": {"kilometers": 92090.0},
+                "coordinates": {"lat": 39.399872, "lng": -8.224454},
+                "languages": [{"name": "Portuguese"}],
+                "currencies": [{"code": "EUR", "name": "Euro"}],
                 "timezones": ["UTC+00:00", "UTC-01:00"],
             }
         ]
@@ -285,11 +292,10 @@ class TestNormalizationAndTransformationPipeline:
         """Should handle partial optional data correctly."""
         raw_data = [
             {
-                "name": {"common": "Iceland", "official": "Iceland"},
-                "cca2": "IS",
-                "cca3": "ISL",
+                "names": {"common": "Iceland", "official": "Iceland"},
+                "codes": {"alpha_2": "IS", "alpha_3": "ISL"},
                 "region": "Europe",
-                # Missing: subregion, area, latlng, languages, currencies
+                # Missing: subregion, area, coordinates, languages, currencies
                 "population": 381900,
             }
         ]
@@ -317,15 +323,17 @@ class TestNormalizationWithDatabasePersistence:
         """Should persist transformed countries to database."""
         raw_data = [
             {
-                "name": {"common": "Germany", "official": "Federal Republic of Germany"},
-                "cca2": "DE",
-                "cca3": "DEU",
+                "names": {
+                    "common": "Germany",
+                    "official": "Federal Republic of Germany",
+                },
+                "codes": {"alpha_2": "DE", "alpha_3": "DEU"},
                 "region": "Europe",
                 "population": 83369843,
-                "area": 357022.0,
-                "latlng": [51.165691, 10.451526],
-                "languages": {"deu": "German"},
-                "currencies": {"EUR": {"name": "Euro"}},
+                "area": {"kilometers": 357022.0},
+                "coordinates": {"lat": 51.165691, "lng": 10.451526},
+                "languages": [{"name": "German"}],
+                "currencies": [{"code": "EUR", "name": "Euro"}],
                 "timezones": ["UTC+01:00"],
             }
         ]
@@ -340,7 +348,9 @@ class TestNormalizationWithDatabasePersistence:
         test_db_session.commit()
 
         # Verify persistence
-        queried = test_db_session.query(Country).filter(Country.iso_code_2 == "DE").first()
+        queried = (
+            test_db_session.query(Country).filter(Country.iso_code_2 == "DE").first()
+        )
         assert queried is not None
         assert queried.name_common == "Germany"
         assert queried.population == 83369843
@@ -351,22 +361,20 @@ class TestNormalizationWithDatabasePersistence:
         """Should persist multiple transformed countries."""
         raw_data = [
             {
-                "name": {"common": "Italy", "official": "Italian Republic"},
-                "cca2": "IT",
-                "cca3": "ITA",
+                "names": {"common": "Italy", "official": "Italian Republic"},
+                "codes": {"alpha_2": "IT", "alpha_3": "ITA"},
                 "region": "Europe",
                 "population": 58940760,
-                "languages": {"ita": "Italian"},
-                "currencies": {"EUR": {"name": "Euro"}},
+                "languages": [{"name": "Italian"}],
+                "currencies": [{"code": "EUR", "name": "Euro"}],
             },
             {
-                "name": {"common": "Greece", "official": "Hellenic Republic"},
-                "cca2": "GR",
-                "cca3": "GRC",
+                "names": {"common": "Greece", "official": "Hellenic Republic"},
+                "codes": {"alpha_2": "GR", "alpha_3": "GRC"},
                 "region": "Europe",
                 "population": 10640801,
-                "languages": {"ell": "Greek"},
-                "currencies": {"EUR": {"name": "Euro"}},
+                "languages": [{"name": "Greek"}],
+                "currencies": [{"code": "EUR", "name": "Euro"}],
             },
         ]
 
@@ -381,8 +389,12 @@ class TestNormalizationWithDatabasePersistence:
         count = test_db_session.query(Country).count()
         assert count == 2
 
-        italy = test_db_session.query(Country).filter(Country.iso_code_2 == "IT").first()
-        greece = test_db_session.query(Country).filter(Country.iso_code_2 == "GR").first()
+        italy = (
+            test_db_session.query(Country).filter(Country.iso_code_2 == "IT").first()
+        )
+        greece = (
+            test_db_session.query(Country).filter(Country.iso_code_2 == "GR").first()
+        )
 
         assert italy.name_common == "Italy"
         assert greece.name_common == "Greece"

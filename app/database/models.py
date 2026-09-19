@@ -51,7 +51,10 @@ class Country(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )
 
     # Relationships
@@ -73,7 +76,9 @@ class Country(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Country(id={self.id}, name={self.name_common}, iso2={self.iso_code_2})>"
+        return (
+            f"<Country(id={self.id}, name={self.name_common}, iso2={self.iso_code_2})>"
+        )
 
 
 class Language(Base):

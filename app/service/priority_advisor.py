@@ -6,7 +6,7 @@ to synchronize, update, or process based on business rules and data quality.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import Any, List
 
 from app.database.models import Country
 from app.utils.logger import get_logger
@@ -18,18 +18,18 @@ class SyncPriority(str, Enum):
     """Data synchronization priority levels."""
 
     CRITICAL = "critical"  # Missing or invalid data
-    HIGH = "high"          # Significant changes detected
-    MEDIUM = "medium"      # Minor updates
-    LOW = "low"           # No changes detected
+    HIGH = "high"  # Significant changes detected
+    MEDIUM = "medium"  # Minor updates
+    LOW = "low"  # No changes detected
 
 
 class DataQuality(str, Enum):
     """Data quality assessment levels."""
 
-    COMPLETE = "complete"      # All fields present and valid
-    PARTIAL = "partial"        # Some fields missing but valid
+    COMPLETE = "complete"  # All fields present and valid
+    PARTIAL = "partial"  # Some fields missing but valid
     INCOMPLETE = "incomplete"  # Multiple missing fields
-    INVALID = "invalid"        # Data validation failed
+    INVALID = "invalid"  # Data validation failed
 
 
 @dataclass
@@ -243,7 +243,7 @@ class PriorityAdvisor:
 
         return sorted_scores[:max_results]
 
-    def assess_batch_quality(self, countries: List[Country]) -> dict:
+    def assess_batch_quality(self, countries: List[Country]) -> dict[str, Any]:
         """Assess quality of entire batch of countries.
 
         Args:
@@ -275,12 +275,10 @@ class PriorityAdvisor:
             "critical_updates_needed": sum(
                 1 for s in scores if s.priority == SyncPriority.CRITICAL
             ),
-            "high_priority": sum(
-                1 for s in scores if s.priority == SyncPriority.HIGH
-            ),
+            "high_priority": sum(1 for s in scores if s.priority == SyncPriority.HIGH),
         }
 
-    def should_update_country(self, country: Country, new_data: dict) -> bool:
+    def should_update_country(self, country: Country, new_data: dict[str, Any]) -> bool:
         """Determine if a country record should be updated based on data quality.
 
         Args:
@@ -303,10 +301,7 @@ class PriorityAdvisor:
         if new_data.get("area") and not country.area:
             return True
 
-        if (
-            new_data.get("latitude") is not None
-            and country.latitude is None
-        ):
+        if new_data.get("latitude") is not None and country.latitude is None:
             return True
 
         # Update if population changed significantly (>5%)
