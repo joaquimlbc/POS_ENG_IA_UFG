@@ -1,7 +1,7 @@
 # PG genIA MVP-01: REST Countries API & Dashboard
 
-**Status:** 🟢 Production Ready (Release 0.1-beta)  
-**Último Update:** 19/09/2026  
+**Status:** 🟢 Production Ready (Release 0.1)  
+**Última Atualização:** 19/09/2026  
 **Test Coverage:** 269+ testes ✅ 96% coverage  
 **Code Quality:** DRY ✅ SRP ✅ Type-Safe ✅
 
