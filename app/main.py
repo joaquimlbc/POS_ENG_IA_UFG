@@ -5,10 +5,12 @@ Este módulo contém a configuração da aplicação FastAPI, incluindo
 definição de schemas, rotas de saúde, middleware e integração de todas as rotas.
 """
 
+import os
 from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.country_routes import router as country_router
@@ -54,6 +56,23 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+)
+
+# CORS: origens permitidas via variável de ambiente (lista separada por vírgula).
+# Default cobre os servidores de desenvolvimento local (FastAPI e futura dashboard Streamlit).
+_default_origins = "http://localhost:8000,http://localhost:8501,http://127.0.0.1:8000,http://127.0.0.1:8501"
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", _default_origins).split(",")
+    if origin.strip()
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Incluir rotas de país

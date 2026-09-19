@@ -26,6 +26,7 @@ from app.service import CountryService
 from app.utils.errors import (
     DuplicateRecordError,
     RecordNotFoundError,
+    ValidationError,
 )
 from app.utils.logger import get_logger
 
@@ -78,6 +79,9 @@ def create_country(
     except DuplicateRecordError as e:
         logger.warning(f"Duplicate country: {e.message}")
         raise HTTPException(status_code=409, detail=e.message)
+    except ValidationError as e:
+        logger.warning(f"Validation error creating country: {e.message}")
+        raise HTTPException(status_code=422, detail=e.message)
     except Exception as e:
         logger.error(f"Failed to create country: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -114,6 +118,8 @@ def list_countries(
     """
     try:
         return service.list_countries(page=page, limit=limit, region=region)
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.message)
     except Exception as e:
         logger.error(f"Failed to list countries: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -202,6 +208,8 @@ def update_country(
         raise HTTPException(status_code=404, detail=e.message)
     except DuplicateRecordError as e:
         raise HTTPException(status_code=409, detail=e.message)
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.message)
     except Exception as e:
         logger.error(f"Failed to update country: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -256,6 +264,8 @@ def add_languages(
         return service.add_languages(country_id, languages or [])
     except RecordNotFoundError as e:
         raise HTTPException(status_code=404, detail=e.message)
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.message)
     except Exception as e:
         logger.error(f"Failed to add languages: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -277,6 +287,8 @@ def add_currencies(
         return service.add_currencies(country_id, currencies or [])
     except RecordNotFoundError as e:
         raise HTTPException(status_code=404, detail=e.message)
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.message)
     except Exception as e:
         logger.error(f"Failed to add currencies: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -298,6 +310,8 @@ def add_timezones(
         return service.add_timezones(country_id, timezones or [])
     except RecordNotFoundError as e:
         raise HTTPException(status_code=404, detail=e.message)
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.message)
     except Exception as e:
         logger.error(f"Failed to add timezones: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")

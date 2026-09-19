@@ -236,9 +236,6 @@ GET    /                              # Root endpoint
 ```
 PG_genIA_MVP-01/
 ├── README.md                         # Este arquivo
-├── REFACTORING_ANALYSIS.md          # Análise DRY/SRP
-├── TESTS_SUMMARY.md                 # Documentação de testes
-├── API_ROUTES.md                    # Documentação de endpoints
 ├── requirements.txt                 # Dependências principais
 ├── requirements-test.txt            # Dependências de teste
 │
@@ -287,11 +284,14 @@ PG_genIA_MVP-01/
 │       ├── test_service_errors.py    # 8 testes exception handling
 │       └── __init__.py
 │
-├── docs/
-│   ├── PERSISTENCE.md                # Análise de persistência
-│   ├── SERVICE_LAYER.md              # Documentação de arquitetura
-│   ├── REVISAO_TECNICA.md            # Análise técnica detalhada
-│   └── examples/                     # Exemplos de uso
+├── documentacoes/
+│   ├── ARCHITECTURE.md               # Arquitetura consolidada (fonte única)
+│   ├── API_ROUTES.md                 # Documentação de endpoints
+│   ├── PERSISTENCE.md                # Estratégia de persistência
+│   ├── SERVICE_LAYER.md              # Documentação de arquitetura em camadas
+│   ├── PRD_PG_genIA_MVP-01.md        # Requisitos de produto
+│   ├── BACKLOG_PG_genIA_MVP-01.md    # Backlog de histórias de usuário
+│   └── historico/                    # Relatórios pontuais de sprints anteriores
 │
 ├── prompts/
 │   ├── prompts-mvp-rest-countries.md # Especificações CO-STAR
@@ -412,11 +412,11 @@ locust -f tests/load/locustfile.py --host=http://localhost:8000
 ## 📚 Documentação
 
 ### Técnica
-- **REFACTORING_ANALYSIS.md** - Análise DRY/SRP com patches
-- **TESTS_SUMMARY.md** - Documentação completa dos 48 testes
-- **API_ROUTES.md** - Todos os 14 endpoints com exemplos
-- **PERSISTENCE.md** - Estratégia de banco de dados
-- **SERVICE_LAYER.md** - Arquitetura de camadas
+- **[documentacoes/ARCHITECTURE.md](documentacoes/ARCHITECTURE.md)** - Arquitetura consolidada (fonte única, com diagramas C4/Mermaid)
+- **[documentacoes/API_ROUTES.md](documentacoes/API_ROUTES.md)** - Endpoints com exemplos
+- **[documentacoes/PERSISTENCE.md](documentacoes/PERSISTENCE.md)** - Estratégia de banco de dados
+- **[documentacoes/SERVICE_LAYER.md](documentacoes/SERVICE_LAYER.md)** - Arquitetura de camadas
+- **[documentacoes/historico/](documentacoes/historico/)** - Relatórios pontuais de sprints anteriores (status, cobertura, revisões técnicas, análise de refactoring, resumos de sessão)
 
 ### Contexto do Projeto
 - **prompts/prompts-mvp-rest-countries.md** - Especificações CO-STAR
