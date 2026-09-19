@@ -1,26 +1,28 @@
 # PG genIA MVP-01: REST Countries API & Dashboard
 
 **Status:** 🟢 Production Ready (Release 0.1-beta)  
-**Último Update:** 17/09/2026  
-**Test Coverage:** 48 testes (100% críticos)  
-**Code Quality:** DRY ✅ SRP ✅
+**Último Update:** 19/09/2026  
+**Test Coverage:** 269+ testes ✅ 96% coverage  
+**Code Quality:** DRY ✅ SRP ✅ Type-Safe ✅
 
 ---
 
 ## 📋 Objetivo
 
-Desenvolver API RESTful com arquitetura em 4 camadas que consome dados da REST Countries API, armazena em banco de dados relacional com validações críticas, e fornece endpoints para dashboard interativo com métricas populacionais e regionais.
+Desenvolver API RESTful com arquitetura em 4 camadas que consome dados da REST Countries API, armazena em banco SQLite com validações críticas, e fornece dashboard Streamlit interativo com KPIs, filtros, tabelas e visualizações de dados populacionais e regionais.
 
-### ✨ Status Atual (17/09/2026)
+### ✨ Status Atual (19/09/2026)
 
 | Componente | Status | Detalhes |
 |-----------|--------|----------|
-| **Arquitetura** | ✅ Completa | 4 camadas (API → Service → Repository → ORM) |
-| **Validações** | ✅ 5 críticas | ISO2/ISO3 uniqueness, region enum, population range, coordinates, batch size |
-| **Testes** | ✅ 48/48 pass | PRIORIDADE 1 - all críticos passando |
-| **Integração API** | ✅ 14 endpoints | Todos os endpoints integrados em main.py |
-| **Documentação** | ✅ 3,200+ linhas | Técnica, arquitetura, exemplos |
-| **CI/CD** | ✅ Pronto | Estrutura para GitHub Actions |
+| **Arquitetura** | ✅ Completa | 4 camadas (API → Service → Repository → ORM) com validações |
+| **API REST** | ✅ 17 endpoints | CRUD, relacionamentos, estatísticas, sincronização |
+| **Documentação** | ✅ 100% OpenAPI | Swagger UI (/docs), ReDoc (/redoc), OpenAPI schema (/openapi.json) - **US-013 ✅** |
+| **Dashboard** | ✅ Completo | Streamlit com KPIs, filtros, tabelas, gráficos - **US-014 a US-021 ✅** |
+| **Testes** | ✅ 269+ pass | 96% coverage, unit + integration + end-to-end |
+| **Banco de Dados** | ✅ 250 países | SQLite com 4 tabelas, índices, integridade referencial |
+| **Scheduler** | ✅ APScheduler | Sincronização diária automática 00:00 UTC - **US-012 ✅** |
+| **Qualidade** | ✅ Máxima | Black, Flake8, mypy --strict (0 erros) |
 
 ---
 
@@ -50,20 +52,30 @@ Logging Layer (Structured - app/utils/logger.py)
 
 ### Backend
 - **Python 3.11+** - Linguagem principal
-- **FastAPI** - Framework REST API
-- **SQLAlchemy 2.0** - ORM relacional  
-- **Pydantic v2** - Validação e serialização
-- **SQLite/PostgreSQL** - Banco de dados
+- **FastAPI 0.109+** - Framework REST API com OpenAPI automático
+- **SQLAlchemy 2.0+** - ORM relacional com type hints
+- **Pydantic v2** - Validação, serialização e OpenAPI schema
+- **APScheduler 3.11** - Agendamento de tasks (sincronização diária)
 
-### Testing
-- **pytest 7.4.3** - Framework de testes
-- **httpx 0.25+** - Client HTTP para testes de API
+### Banco de Dados
+- **SQLite** - Desenvolvimento/testes (em-memória para testes)
+- **PostgreSQL** - Ready para produção
 
-### Frontend (Futuro)
-- **Streamlit** - Dashboard interativo
+### Frontend
+- **Streamlit 1.51+** - Dashboard interativo com cache e real-time
+- **Plotly** - Gráficos interativos (barras, pizza)
+
+### Testing & Quality
+- **pytest 7.4+** - Framework de testes
+- **pytest-cov** - Code coverage
+- **Black** - Code formatting
+- **Flake8** - Linting
+- **mypy** - Type checking (--strict mode)
+- **httpx** - HTTP client para testes de API
 
 ### Ferramentas
-- **Git** - Versionamento (22 commits)
+- **Git** - Versionamento (10+ commits)
+- **GitHub Actions** - CI/CD structure ready
 - **pip** - Gerenciador de pacotes
 - **venv** - Ambiente virtual
 
@@ -84,57 +96,35 @@ python --version  # Python 3.11 ou superior
 
 ---
 
-## 🚀 Como Instalar e Executar
+## 🚀 Quick Start (5 minutos)
 
-### 1. Clonar o repositório
+Para iniciar rapidamente, consulte [QUICK_START.md](QUICK_START.md)
+
+### Resumo:
+
 ```bash
-git clone <url-do-repositorio>
+# 1. Preparar ambiente
+git clone https://github.com/joaquimlbc/POS_ENG_IA_UFG.git
 cd PG_genIA_MVP-01
-```
+python -m venv .venv && .\.venv\Scripts\Activate.ps1
 
-### 2. Criar e ativar ambiente virtual
-```bash
-# Windows (PowerShell)
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
-# macOS/Linux (bash)
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 3. Instalar dependências
-
-#### Dependências principais
-```bash
+# 2. Instalar e inicializar
 pip install -r requirements.txt
+python -m app.scripts.ingest
+
+# 3. Executar serviços (em terminais diferentes)
+# Terminal 1: API
+python -m uvicorn app.main:app --reload
+
+# Terminal 2: Dashboard
+streamlit run streamlit_app.py
 ```
 
-#### Dependências de teste (opcional)
-```bash
-pip install -r requirements-test.txt
-```
-
-### 4. Inicializar banco de dados
-```bash
-python -c "from app.database.connection import init_db; init_db()"
-```
-
-### 5. Executar servidor API
-```bash
-# Desenvolvimento (com reload automático)
-python app/main.py
-
-# Produção (com Uvicorn)
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
-API estará disponível em: **http://localhost:8000**
-
-📖 **Documentação interativa:**
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-- Health check: http://localhost:8000/health
+**Acesso:**
+- 🌐 **API:** http://localhost:8000
+- 📊 **Dashboard:** http://localhost:8501
+- 📖 **Swagger:** http://localhost:8000/docs
+- 📋 **ReDoc:** http://localhost:8000/redoc
 
 ---
 
@@ -192,42 +182,104 @@ Isolation: 100% (SQLite in-memory, rollback por teste)
 
 ---
 
-## 📡 API Endpoints
+## 📡 API Endpoints (17 Total)
 
 ### Documentação Completa
-Ver `API_ROUTES.md` para documentação detalhada de todos os 14 endpoints.
+Ver [`OPENAPI_DOCUMENTATION.md`](documentacoes/OPENAPI_DOCUMENTATION.md) e [`API_ROUTES.md`](documentacoes/API_ROUTES.md) para detalhes.
 
-### Endpoints Principais
+### Endpoints por Categoria
 
-**Countries CRUD**
+**CRUD Operations** (6 endpoints)
 ```
 POST   /api/v1/countries              # Criar país (201)
-GET    /api/v1/countries              # Listar países (paginated, 200)
-GET    /api/v1/countries/{id}         # Detalhes país (200/404)
-PUT    /api/v1/countries/{id}         # Atualizar país (200/404)
-DELETE /api/v1/countries/{id}         # Deletar país (204/404)
+GET    /api/v1/countries              # Listar (paginated, 200)
+GET    /api/v1/countries/{id}         # Detalhes por ID (200/404)
+GET    /api/v1/countries/iso/{code}   # Detalhes por ISO (200/404)
+PUT    /api/v1/countries/{id}         # Atualizar (200/404)
+DELETE /api/v1/countries/{id}         # Deletar (204/404)
 ```
 
-**Relacionamentos**
+**Relacionamentos** (3 endpoints)
 ```
 POST   /api/v1/countries/{id}/languages   # Adicionar idiomas
 POST   /api/v1/countries/{id}/currencies  # Adicionar moedas
 POST   /api/v1/countries/{id}/timezones   # Adicionar fusos
 ```
 
-**Sincronização & Análise**
+**Análise & Estatísticas** (5 endpoints)
 ```
-POST   /api/v1/sync                   # Batch sync de países
-GET    /api/v1/statistics/global      # Estatísticas globais
-GET    /api/v1/statistics/regional    # Por região
-POST   /api/v1/data-gaps              # Identificar gaps
+GET    /api/v1/statistics             # Estatísticas globais
+GET    /api/v1/regions                # Breakdown por região
+GET    /api/v1/data-gaps              # Identificar quality gaps
+GET    /api/v1/countries/{id}/validate # Validar integridade país
+POST   /api/v1/sync                   # Sincronizar dados
 ```
 
-**Health**
+**Health & Metadata** (2 endpoints)
 ```
 GET    /health                        # Health check (200)
-GET    /                              # Root endpoint
+GET    /                              # Root endpoint (200)
 ```
+
+**Documentação Interativa:**
+```
+GET    /docs                          # Swagger UI (OpenAPI interativo)
+GET    /redoc                         # ReDoc (visualização alternativa)
+GET    /openapi.json                  # Schema OpenAPI 3.0.0 (JSON)
+```
+
+### Exemplos de Uso
+
+```bash
+# Listar países com filtro
+curl "http://localhost:8000/api/v1/countries?region=Americas&page=1&limit=20"
+
+# Obter país por ISO code
+curl http://localhost:8000/api/v1/countries/iso/BR
+
+# Estatísticas globais
+curl http://localhost:8000/api/v1/statistics
+
+# Sincronizar dados
+curl -X POST http://localhost:8000/api/v1/sync
+```
+
+---
+
+## 📊 Dashboard Streamlit
+
+**Status:** ✅ Completo (US-014 a US-021)  
+**Acesso:** http://localhost:8501
+
+### Funcionalidades
+
+**KPIs (Métricas Principais)**
+- Total de Países
+- População Global (formatado)
+- Região mais Populosa
+- Maior País por Área
+
+**Filtros & Interatividade**
+- Selector de Região (All, Africa, Americas, Asia, Europe, Oceania)
+- Atualização em tempo real
+
+**Tabela de Países**
+- 7 colunas (Flag, Nome, População, Área, Região, Densidade, Ações)
+- Ordenação por coluna
+- Busca por nome
+- Paginação (20 por página)
+- Detalhes expandidos
+
+**Visualizações**
+- **Top 10 por População** (gráfico de barras com cores degradadas)
+- **Top 10 por Área** (gráfico de barras em km²)
+- **Distribuição Regional** (2 gráficos de pizza - população e quantidade)
+
+**Responsividade**
+- Mobile-friendly (< 768px)
+- Funciona em diferentes tamanhos de tela
+- Sem scroll horizontal
+- Cores com bom contraste (WCAG AA)
 
 ---
 
