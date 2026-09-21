@@ -235,9 +235,7 @@ class CountryDetailResponse(CountryResponse):
                 "currencies": [
                     {"id": 1, "currency_code": "BRL", "currency_name": "Brazilian Real"}
                 ],
-                "timezones": [
-                    {"id": 1, "timezone_name": "America/Sao_Paulo"}
-                ],
+                "timezones": [{"id": 1, "timezone_name": "America/Sao_Paulo"}],
             }
         },
     )

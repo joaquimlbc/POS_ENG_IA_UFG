@@ -39,9 +39,19 @@ REGION_ORDER = list(REGION_COLORS.keys())
 # categorical-slot order: population=slot1 blue, area=slot2 orange,
 # language-population=slot3 aqua, language-count=slot4 yellow.
 SEQUENTIAL_BLUE = [
-    "#cde2fb", "#b7d3f6", "#9ec5f4", "#86b6ef",
-    "#6da7ec", "#5598e7", "#3987e5", "#2a78d6",
-    "#256abf", "#1c5cab", "#184f95", "#104281", "#0d366b",
+    "#cde2fb",
+    "#b7d3f6",
+    "#9ec5f4",
+    "#86b6ef",
+    "#6da7ec",
+    "#5598e7",
+    "#3987e5",
+    "#2a78d6",
+    "#256abf",
+    "#1c5cab",
+    "#184f95",
+    "#104281",
+    "#0d366b",
 ]
 SEQUENTIAL_ORANGE = ["#fbe3d5", "#eb6834"]
 SEQUENTIAL_AQUA = ["#d3f0e4", "#1baf7a"]
@@ -66,10 +76,14 @@ def _apply_chart_theme(fig) -> None:
         font=CHART_FONT,
     )
     fig.update_xaxes(
-        gridcolor=CHART_GRIDCOLOR, linecolor=CHART_LINECOLOR, tickfont=dict(color=CHART_MUTED)
+        gridcolor=CHART_GRIDCOLOR,
+        linecolor=CHART_LINECOLOR,
+        tickfont=dict(color=CHART_MUTED),
     )
     fig.update_yaxes(
-        gridcolor=CHART_GRIDCOLOR, linecolor=CHART_LINECOLOR, tickfont=dict(color=CHART_MUTED)
+        gridcolor=CHART_GRIDCOLOR,
+        linecolor=CHART_LINECOLOR,
+        tickfont=dict(color=CHART_MUTED),
     )
 
 
@@ -492,7 +506,9 @@ def main() -> None:
         )
         return
 
-    region = st.selectbox("Filtrar por Continente", REGIONS, index=0, key="region_filter")
+    region = st.selectbox(
+        "Filtrar por Continente", REGIONS, index=0, key="region_filter"
+    )
     df = full_df if region == "Todas" else full_df[full_df["Região"] == region]
 
     render_kpis(df)
