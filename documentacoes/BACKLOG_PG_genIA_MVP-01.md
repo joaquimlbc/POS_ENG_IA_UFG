@@ -557,246 +557,6 @@
 
 Este projeto (**Release 0.1**) foi concluído como parte do currículo de Pós-Graduação em Engenharia de IA da UFG.
 
-As evoluções mencionadas a seguir (Release 0.2, 0.3, etc.) serão exploradas em **outros módulos do curso** e refletem o roadmap técnico inicial. O projeto atual está **Production Ready** e totalmente funcional como MVP.
-
-⚠️ **Nota:** A seção abaixo é apenas para referência histórica e contexto de design. A implementação de novos features seguirá os padrões estabelecidos nesta Release 0.1.
-
----
-
-## 🚀 RELEASE 0.2 - APIs & Analytics (Proposto - Não Escopo Release 0.1)
-
-**Objetivo:** Endpoints completos, gráficos avançados, exportação de dados  
-**Deadline:** 31 de Outubro de 2026  
-**Status:** 📋 Planejado  
-
----
-
-### EPIC E-008: APIs Completas
-
-#### US-032: Endpoint GET /api/v1/countries (Listar) 
-- **Prioridade:** 🟠 ALTO
-- **Story Points:** 5
-- **Dependências:** [Release 0.1 completa]
-- **Descrição:** API para listar países com filtros e paginação
-- **Critérios de Aceite:**
-  - [ ] Rota GET `/api/v1/countries` implementada
-  - [ ] Query params: `page`, `limit`, `region`, `search`
-  - [ ] Resposta paginada com metadata (total, página_atual, próxima)
-  - [ ] Default limit=20, max limit=100
-  - [ ] Filtro por região funcional
-  - [ ] Busca por nome (like)
-  - [ ] Status 200/400/500 apropriados
-  - [ ] Swagger documentado
-
-#### US-033: Endpoint GET /api/v1/countries/{code}
-- **Prioridade:** 🟠 ALTO
-- **Story Points:** 3
-- **Dependências:** [Release 0.1 completa]
-- **Descrição:** API para obter detalhes de um país específico
-- **Critérios de Aceite:**
-  - [ ] Rota GET `/api/v1/countries/{code}` (ISO2 ou ISO3)
-  - [ ] Retorna país completo com relacionamentos
-  - [ ] Status 200 ou 404
-  - [ ] Swagger documentado
-
-#### US-034: Endpoint GET /api/v1/regions
-- **Prioridade:** 🟡 MÉDIO
-- **Story Points:** 2
-- **Dependências:** [Release 0.1 completa]
-- **Descrição:** Agrupar países por região com agregações
-- **Critérios de Aceite:**
-  - [ ] Rota GET `/api/v1/regions` 
-  - [ ] Retorna lista de regiões com: nome, total_países, população_total, área_total
-  - [ ] Ordenável por população/área
-
-#### US-035: Endpoint GET /api/v1/statistics
-- **Prioridade:** 🟡 MÉDIO
-- **Story Points:** 3
-- **Dependências:** [Release 0.1 completa]
-- **Descrição:** Estatísticas globais
-- **Critérios de Aceite:**
-  - [ ] Total de países, população global, área total
-  - [ ] Top 5 países por população
-  - [ ] Média de população por país
-  - [ ] Distribuição por região
-
-#### US-036: Rate Limiting & Cache
-- **Prioridade:** 🟠 ALTO
-- **Story Points:** 3
-- **Dependências:** [Release 0.1 completa]
-- **Descrição:** Implementar rate limiting e caching
-- **Critérios de Aceite:**
-  - [ ] Rate limit: 100 req/min por IP
-  - [ ] Cache em Redis (ou em-memória)
-  - [ ] TTL configurável (default 3600s)
-  - [ ] Headers de cache apropriados
-
----
-
-### EPIC E-009: Dashboard Avançado
-
-#### US-037: Gráficos Avançados (Heatmap, Scatter)
-- **Prioridade:** 🟡 MÉDIO
-- **Story Points:** 5
-- **Dependências:** [Release 0.1 completa]
-- **Descrição:** Visualizações mais sofisticadas
-- **Critérios de Aceite:**
-  - [ ] Heatmap: Densidade populacional por região
-  - [ ] Scatter: Correlação entre população e área
-  - [ ] Ambos interativos com seleção
-
-#### US-038: Comparação entre Países
-- **Prioridade:** 🟡 MÉDIO
-- **Story Points:** 4
-- **Dependências:** US-017
-- **Descrição:** Seletor para comparar 2-3 países
-- **Critérios de Aceite:**
-  - [ ] Multi-select de países
-  - [ ] Comparação lado-a-lado em tabela
-  - [ ] Gráficos comparativos
-
----
-
-### EPIC E-010: Exportação de Dados
-
-#### US-039: Exportação para CSV
-- **Prioridade:** 🟠 ALTO
-- **Story Points:** 3
-- **Dependências:** [Release 0.1 completa]
-- **Descrição:** Download de dados como CSV
-- **Critérios de Aceite:**
-  - [ ] Botão "Download CSV" no dashboard
-  - [ ] Arquivo contém: name, iso2, iso3, region, população, área
-  - [ ] Encoding UTF-8
-  - [ ] Nomeação: `countries_YYYY-MM-DD.csv`
-
-#### US-040: Exportação para PDF
-- **Prioridade:** 🟡 MÉDIO
-- **Story Points:** 4
-- **Dependências:** US-039
-- **Descrição:** Gerar PDF com relatório
-- **Critérios de Aceite:**
-  - [ ] Botão "Download PDF" 
-  - [ ] PDF contém tabela + gráficos principais
-  - [ ] Header com data/hora
-  - [ ] Formatação profissional
-
----
-
-## 📊 RELEASE 0.3 - Auth & Intelligence (Proposto - Não Escopo Release 0.1)
-
-**Objetivo:** Autenticação, séries temporais, alertas, insights com IA  
-**Deadline:** 30 de Novembro de 2026  
-**Status:** 📋 Planejado  
-
----
-
-### EPIC E-011: Autenticação & Autorização
-
-#### US-041: Autenticação com JWT
-- **Prioridade:** 🟠 ALTO
-- **Story Points:** 5
-- **Dependências:** [Release 0.1 + 0.2 completas]
-- **Descrição:** Sistema de login com JWT
-- **Critérios de Aceite:**
-  - [ ] Tabela de usuários com hash de senha
-  - [ ] POST `/auth/login` com email/senha
-  - [ ] Retorna JWT token válido por 24h
-  - [ ] Middleware de autenticação em rotas protegidas
-  - [ ] Refresh token implementado
-
-#### US-042: Permissões & RBAC
-- **Prioridade:** 🟡 MÉDIO
-- **Story Points:** 3
-- **Dependências:** US-041
-- **Descrição:** Controle de acesso baseado em papéis
-- **Critérios de Aceite:**
-  - [ ] Papéis: admin, analyst, viewer
-  - [ ] Permissões por rota/endpoint
-  - [ ] Admin pode gerenciar usuários
-  - [ ] Viewer acesso read-only
-
----
-
-### EPIC E-012: Histórico & Séries Temporais
-
-#### US-043: Histórico de Mudanças de Dados
-- **Prioridade:** 🟠 ALTO
-- **Story Points:** 5
-- **Dependências:** [Release 0.1 + 0.2 completas]
-- **Descrição:** Rastrear mudanças de população/área
-- **Critérios de Aceite:**
-  - [ ] Tabela `country_history` com timestamp, campo, valor_antigo, valor_novo
-  - [ ] Auditoria automática em UPDATE
-  - [ ] Query: histórico por país/período
-
-#### US-044: Visualização de Trends
-- **Prioridade:** 🟡 MÉDIO
-- **Story Points:** 4
-- **Dependências:** US-043
-- **Descrição:** Gráficos de séries temporais
-- **Critérios de Aceite:**
-  - [ ] Linha: Evolução de população ao longo do tempo
-  - [ ] Comparação entre países
-  - [ ] Filtro por período (1m, 3m, 6m, 1y)
-
----
-
-### EPIC E-013: Alertas & Notificações
-
-#### US-045: Sistema de Alertas
-- **Prioridade:** 🟡 MÉDIO
-- **Story Points:** 4
-- **Dependências:** [Release 0.1 + 0.2 completas]
-- **Descrição:** Alertas baseados em condições
-- **Critérios de Aceite:**
-  - [ ] Admin cria regra: "Se população > X, alertar"
-  - [ ] Email/webhook ao disparar
-  - [ ] Histórico de alertas
-
-#### US-046: Notificações em Real-time
-- **Prioridade:** 🟡 MÉDIO
-- **Story Points:** 3
-- **Dependências:** US-045
-- **Descrição:** WebSocket para notificações live
-- **Critérios de Aceite:**
-  - [ ] Conexão WebSocket estabelecida
-  - [ ] Alertas entregues em tempo real
-  - [ ] Dashboard atualiza sem refresh
-
----
-
-### EPIC E-014: IA Generativa & Insights
-
-#### US-047: Integração com Claude API
-- **Prioridade:** 🟡 MÉDIO
-- **Story Points:** 5
-- **Dependências:** [Release 0.1 + 0.2 completas]
-- **Descrição:** Usar IA para gerar insights
-- **Critérios de Aceite:**
-  - [ ] Conexão com Claude API (Anthropic)
-  - [ ] Prompts estruturados para análises
-  - [ ] Cache de prompts para economia
-
-#### US-048: Análise Inteligente de Dados
-- **Prioridade:** 🟡 MÉDIO
-- **Story Points:** 4
-- **Dependências:** US-047
-- **Descrição:** Gerar relatórios com IA
-- **Critérios de Aceite:**
-  - [ ] "Analisar região X" → IA fornece insights
-  - [ ] "Comparar países A e B" → IA gera análise
-  - [ ] Resultados salvos em histórico
-
-#### US-049: Recomendações Personalizadas
-- **Prioridade:** 🟢 BAIXO
-- **Story Points:** 3
-- **Dependências:** US-048
-- **Descrição:** IA recomenda análises baseadas no histórico
-- **Critérios de Aceite:**
-  - [ ] Recomendações na dashboard
-  - [ ] Baseadas em padrões de uso
-
 ---
 
 ## 📈 ROADMAP DE RELEASES
@@ -810,59 +570,45 @@ As evoluções mencionadas a seguir (Release 0.2, 0.3, etc.) serão exploradas e
 │ ✅ Health check & Swagger                              │
 │ ✅ Testes unitários (80%+ coverage)                    │
 └─────────────────────────────────────────────────────────┘
-              ↓ (30 Sep 2026)
-┌─────────────────────────────────────────────────────────┐
-│ RELEASE 0.2 (Out 2026) - APIs & Analytics              │
-│ 🔄 Endpoints REST completos                            │
-│ 🔄 Rate limiting & Cache                               │
-│ 🔄 Gráficos avançados                                  │
-│ 🔄 Exportação (CSV, PDF)                               │
-│ 🔄 Comparação entre países                             │
-└─────────────────────────────────────────────────────────┘
-              ↓ (31 Oct 2026)
-┌─────────────────────────────────────────────────────────┐
-│ RELEASE 0.3 (Nov 2026) - Auth & Intelligence           │
-│ 🔄 Autenticação JWT                                    │
-│ 🔄 Histórico & Séries Temporais                        │
-│ 🔄 Alertas & Notificações                              │
-│ 🔄 Integração Claude API (IA Insights)                 │
-└─────────────────────────────────────────────────────────┘
-```
 
 ---
 
 ## 📊 ESTATÍSTICAS DO BACKLOG
 
+### Release 0.1 - Consolidado ✅
+
+| Métrica | Resultado |
+|---------|-----------|
+| **Status** | ✅ **CONCLUÍDO** (19/09/2026) |
+| **Total User Stories** | 31 |
+| **Story Points** | 98 |
+| **Timeline Planejado** | 27 dias |
+| **Timeline Real** | 19 dias (11 dias antecipado) |
+| **Taxa de Conclusão** | 100% |
+
 ### Por Release
 
-| Release | Total US | Story Points | Estimado (dias) |
-|---------|----------|--------------|-----------------|
-| **0.1** | 31 | 98 | 27 dias |
-| **0.2** | 10 | 42 | 12 dias |
-| **0.3** | 9 | 31 | 9 dias |
-| **TOTAL** | 50 | 171 | 48 dias |
+| Release | Total US | Story Points | Status | Data Conclusão |
+|---------|----------|--------------|--------|-----------------|
+| **0.1** | 31 | 98 | ✅ CONCLUÍDO | 19/09/2026 |
 
 ### Por Prioridade
 
 | Prioridade | Count | % |
 |-----------|-------|-----|
-| 🔴 CRÍTICO | 10 | 20% |
-| 🟠 ALTO | 20 | 40% |
-| 🟡 MÉDIO | 14 | 28% |
-| 🟢 BAIXO | 6 | 12% |
+| 🔴 CRÍTICO | 13 | 54% |
+| 🟠 ALTO | 9 | 38% |
+| 🟡 MÉDIO | 2 | 8% |
+| 🟢 BAIXO | 0 | 0% |
 
 ### Por Tipo
 
 | Tipo | Count |
 |------|-------|
 | Infrastructure/Setup | 3 |
-| Backend | 13 |
-| Frontend | 9 |
-| Testing/QA | 4 |
-| Documentation/DevOps | 5 |
-| Validation | 2 |
-| APIs | 5 |
-| Advanced (0.2+) | 9 |
+| Backend | 10 |
+| Frontend | 8 |
+| Testing/QA | 3 |
 
 ---
 
@@ -941,7 +687,6 @@ US-031 (Sign-off)
 2. **Dependências** podem criar gargalos; planejar paralelismo onde possível
 3. **Testes** (US-022+) devem ser desenvolvidos concorrentemente com features
 4. **Documentação** deve ser atualizada incrementalmente, não deixar para o final
-5. **Releases 0.2 e 0.3** estão planejadas mas podem ser ajustadas conforme feedback
 
 ---
 

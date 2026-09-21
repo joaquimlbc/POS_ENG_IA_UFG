@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m py_compile app/models/__init__.py app/database/__init__.py app/service/__init__.py app/utils/__init__.py app/utils/errors.py app/utils/logger.py app/database/schemas.py)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git commit -m 'refactor: extract _ensure_country_exists and _add_related_entities helpers *)",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(git commit -m ' *)",
+      "Bash(python -m pytest tests/integration/ tests/unit/ -v --tb=short)"
+    ]
+  }
+}
