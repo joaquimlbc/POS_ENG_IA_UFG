@@ -278,3 +278,31 @@ Prompt 26 - Implementação
 Realizar implementação conforme planejamento Backlog e priorizações.
 
 -----------------------
+
+Prompt 27 - Revisão final
+
+Contexto: Vamos avaliar a qualidade geral do projeto antes do commit final entrega.
+Objetivo: Avaliar a qualidade geral do projeto e critérios de aceite.
+Estilo: Claro e objetivo.
+Audiencia: Desenvolvedores, POs, PMs, Tech leads, QAs, Cliente final.
+Resposta: Lista da analise em checklist.
+
+-----------------------
+
+Prompt 28 - Apresentação Projeto
+
+Contexto: Apresentar o MVP em 5 minutos para stakeholders técnicos.
+Objetivo: Criar roteiro com tempos por blocos e comandos para mostrar no terminal.
+Estilo: Direto, sem marketing.
+Audiencia: stakeholders técnicos.
+Resposta: Roteiro em markdown, criar aquivo, mas esse arquivo não deve ser commitado.
+
+-----------------------
+
+Prompt 29 - Descrição do projeto
+
+Contexto: Ter um texto descritivo sobre o projeto.
+Objetivo: Criar um texto descritivo sobre o que é o projeto, como foi desenvolvido e o que foi utilizado em todo processo de desenvolvimento.
+Estilo: Direto, com um tom sutil de marketing.
+Audiencia: Público final e avaliadores do trabalho realizado.
+Resposta: Criar arquivo markdown, esse arquivo não será commitado. 

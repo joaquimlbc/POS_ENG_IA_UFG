@@ -105,3 +105,9 @@ prompts/etapas_realizadas.txt
 
 # Histórico de relatórios pontuais (snapshots de sprints anteriores) - não deve ir para o commit
 documentacoes/historico/
+
+# Documentos de apresentação e avaliação (gerados, não versionados)
+MVP_PRESENTATION_5MIN.md
+QUALITY_ASSESSMENT.html
+QUALITY_ASSESSMENT.md
+PROJECT_OVERVIEW.md
