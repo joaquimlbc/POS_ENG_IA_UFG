@@ -35,6 +35,43 @@ REGION_COLORS = {
 }
 REGION_ORDER = list(REGION_COLORS.keys())
 
+# Sequential (magnitude) ramps - one hue per simultaneous chart context, in
+# categorical-slot order: population=slot1 blue, area=slot2 orange,
+# language-population=slot3 aqua, language-count=slot4 yellow.
+SEQUENTIAL_BLUE = [
+    "#cde2fb", "#b7d3f6", "#9ec5f4", "#86b6ef",
+    "#6da7ec", "#5598e7", "#3987e5", "#2a78d6",
+    "#256abf", "#1c5cab", "#184f95", "#104281", "#0d366b",
+]
+SEQUENTIAL_ORANGE = ["#fbe3d5", "#eb6834"]
+SEQUENTIAL_AQUA = ["#d3f0e4", "#1baf7a"]
+SEQUENTIAL_YELLOW = ["#faecc9", "#eda100"]
+
+# Chart chrome tokens (light mode) - keeps every Plotly figure visually
+# consistent with the page and with each other.
+CHART_SURFACE = "#fcfcfb"
+CHART_FONT = dict(
+    family="system-ui, -apple-system, 'Segoe UI', sans-serif", color="#0b0b0b"
+)
+CHART_GRIDCOLOR = "#e1e0d9"
+CHART_LINECOLOR = "#c3c2b7"
+CHART_MUTED = "#898781"
+
+
+def _apply_chart_theme(fig) -> None:
+    """Apply the shared chart chrome (surface, font, grid/axis ink) in place."""
+    fig.update_layout(
+        paper_bgcolor=CHART_SURFACE,
+        plot_bgcolor=CHART_SURFACE,
+        font=CHART_FONT,
+    )
+    fig.update_xaxes(
+        gridcolor=CHART_GRIDCOLOR, linecolor=CHART_LINECOLOR, tickfont=dict(color=CHART_MUTED)
+    )
+    fig.update_yaxes(
+        gridcolor=CHART_GRIDCOLOR, linecolor=CHART_LINECOLOR, tickfont=dict(color=CHART_MUTED)
+    )
+
 
 @st.cache_data(ttl=300)
 def load_countries() -> pd.DataFrame:
@@ -87,32 +124,37 @@ def format_number(value: float) -> str:
 
 def render_kpis(df: pd.DataFrame) -> None:
     """Render the top-row KPI cards for the currently filtered data."""
-    col1, col2, col3, col4 = st.columns(4)
+    with st.container(border=True):
+        col1, col2, col3, col4 = st.columns(4)
 
-    total_countries = len(df)
-    total_population = int(df["População"].sum()) if total_countries else 0
+        total_countries = len(df)
+        total_population = int(df["População"].sum()) if total_countries else 0
 
-    col1.metric("🌍 Total de Países", format_number(total_countries))
-    col2.metric("👥 População Global", format_number(total_population))
-
-    if total_countries and df["População"].sum() > 0:
-        pop_by_region = df.groupby("Região")["População"].sum()
-        top_region = pop_by_region.idxmax()
-        col3.metric(
-            "🏆 Região mais Populosa", top_region, format_number(pop_by_region.max())
+        col1.metric(":material/flag: Total de Países", format_number(total_countries))
+        col2.metric(
+            ":material/groups: População Global", format_number(total_population)
         )
-    else:
-        col3.metric("🏆 Região mais Populosa", "-")
 
-    if total_countries and df["Área (km²)"].notna().any():
-        largest = df.loc[df["Área (km²)"].idxmax()]
-        col4.metric(
-            "📐 Maior País (Área)",
-            largest["Nome"],
-            f"{format_number(largest['Área (km²)'])} km²",
-        )
-    else:
-        col4.metric("📐 Maior País (Área)", "-")
+        if total_countries and df["População"].sum() > 0:
+            pop_by_region = df.groupby("Região")["População"].sum()
+            top_region = pop_by_region.idxmax()
+            col3.metric(
+                ":material/emoji_events: Região mais Populosa",
+                top_region,
+                format_number(pop_by_region.max()),
+            )
+        else:
+            col3.metric(":material/emoji_events: Região mais Populosa", "-")
+
+        if total_countries and df["Área (km²)"].notna().any():
+            largest = df.loc[df["Área (km²)"].idxmax()]
+            col4.metric(
+                ":material/straighten: Maior País (Área)",
+                largest["Nome"],
+                f"{format_number(largest['Área (km²)'])} km²",
+            )
+        else:
+            col4.metric(":material/straighten: Maior País (Área)", "-")
 
 
 def render_bar_charts(df: pd.DataFrame) -> None:
@@ -122,7 +164,7 @@ def render_bar_charts(df: pd.DataFrame) -> None:
     region selector. Color encodes magnitude (sequential, single hue,
     light->dark) - it is not a second, redundant categorical encoding.
     """
-    st.subheader("📊 Top 10 Países")
+    st.subheader(":material/bar_chart: Top 10 Países")
 
     if df.empty:
         st.info("Nenhum país para exibir nos gráficos.")
@@ -138,7 +180,7 @@ def render_bar_charts(df: pd.DataFrame) -> None:
             y="Nome",
             orientation="h",
             color="População",
-            color_continuous_scale="Blues",
+            color_continuous_scale=SEQUENTIAL_BLUE,
             text="População",
             title="Top 10 por População",
         )
@@ -149,6 +191,7 @@ def render_bar_charts(df: pd.DataFrame) -> None:
             xaxis_title="População",
             margin=dict(l=0, r=0, t=40, b=0),
         )
+        _apply_chart_theme(fig_pop)
         st.plotly_chart(fig_pop, use_container_width=True)
 
     with col2:
@@ -166,7 +209,7 @@ def render_bar_charts(df: pd.DataFrame) -> None:
                 y="Nome",
                 orientation="h",
                 color="Área (km²)",
-                color_continuous_scale="Oranges",
+                color_continuous_scale=SEQUENTIAL_ORANGE,
                 text="Área (km²)",
                 title="Top 10 por Área",
             )
@@ -177,6 +220,7 @@ def render_bar_charts(df: pd.DataFrame) -> None:
                 xaxis_title="Área (km²)",
                 margin=dict(l=0, r=0, t=40, b=0),
             )
+            _apply_chart_theme(fig_area)
             st.plotly_chart(fig_area, use_container_width=True)
 
 
@@ -189,7 +233,7 @@ def render_language_chart(df: pd.DataFrame) -> None:
     continent selector. Color encodes magnitude (sequential, single hue) as in
     the other top-10 charts.
     """
-    st.subheader("🗣️ Idiomas mais falados")
+    st.subheader(":material/translate: Idiomas mais falados")
 
     if df.empty:
         st.info("Nenhum país para exibir nos gráficos de idiomas.")
@@ -224,7 +268,7 @@ def render_language_chart(df: pd.DataFrame) -> None:
             y=top_lang_pop.index,
             orientation="h",
             color=top_lang_pop.values,
-            color_continuous_scale="Greens",
+            color_continuous_scale=SEQUENTIAL_AQUA,
             text=top_lang_pop.values,
             title="Top 10 Idiomas por População Falante (estimativa)",
         )
@@ -235,6 +279,7 @@ def render_language_chart(df: pd.DataFrame) -> None:
             xaxis_title="População",
             margin=dict(l=0, r=0, t=40, b=0),
         )
+        _apply_chart_theme(fig_pop)
         st.plotly_chart(fig_pop, use_container_width=True)
         st.caption(
             "Números Estimados: soma da população falante; e sobrecontagem em países multilíngues."
@@ -248,7 +293,7 @@ def render_language_chart(df: pd.DataFrame) -> None:
             y=top_lang_count.index,
             orientation="h",
             color=top_lang_count.values,
-            color_continuous_scale="Greens",
+            color_continuous_scale=SEQUENTIAL_YELLOW,
             text=top_lang_count.values,
             title="Top 10 Idiomas por Nº de Países",
         )
@@ -259,6 +304,7 @@ def render_language_chart(df: pd.DataFrame) -> None:
             xaxis_title="Nº de países",
             margin=dict(l=0, r=0, t=40, b=0),
         )
+        _apply_chart_theme(fig_count)
         st.plotly_chart(fig_count, use_container_width=True)
 
 
@@ -273,7 +319,7 @@ def render_pie_charts(full_df: pd.DataFrame) -> None:
     fill (three of the five region colors fall under 3:1 against a light
     surface).
     """
-    st.subheader("🥧 Distribuição Regional")
+    st.subheader(":material/pie_chart: Distribuição Regional")
 
     pop_by_region = (
         full_df.groupby("Região")["População"].sum().reindex(REGION_ORDER).dropna()
@@ -298,6 +344,7 @@ def render_pie_charts(full_df: pd.DataFrame) -> None:
         fig_pop_pie.update_traces(sort=False)
         fig_pop_pie.update_traces(textinfo="label+percent", textposition="outside")
         fig_pop_pie.update_layout(showlegend=True, margin=dict(l=0, r=0, t=40, b=0))
+        _apply_chart_theme(fig_pop_pie)
         st.plotly_chart(fig_pop_pie, use_container_width=True)
 
     with col2:
@@ -312,6 +359,7 @@ def render_pie_charts(full_df: pd.DataFrame) -> None:
         fig_count_pie.update_traces(sort=False)
         fig_count_pie.update_traces(textinfo="label+percent", textposition="outside")
         fig_count_pie.update_layout(showlegend=True, margin=dict(l=0, r=0, t=40, b=0))
+        _apply_chart_theme(fig_count_pie)
         st.plotly_chart(fig_count_pie, use_container_width=True)
 
 
@@ -322,7 +370,11 @@ def render_country_detail(detail: pd.Series) -> None:
     has_coords = pd.notna(detail["Latitude"]) and pd.notna(detail["Longitude"])
 
     tab_id, tab_geo, tab_culture = st.tabs(
-        ["🏷️ Identificação", "📊 Geografia & Demografia", "🌐 Cultura & Fusos"]
+        [
+            ":material/id_card: Identificação",
+            ":material/public: Geografia & Demografia",
+            ":material/language: Cultura & Fusos",
+        ]
     )
 
     with tab_id:
@@ -355,7 +407,7 @@ def render_country_detail(detail: pd.Series) -> None:
 
 def render_table(df: pd.DataFrame) -> None:
     """Render the searchable, paginated country table with a detail view."""
-    search = st.text_input("🔎 Buscar por nome")
+    search = st.text_input(":material/search: Buscar por nome")
     if search:
         df = df[df["Nome"].str.contains(search, case=False, na=False)]
 
@@ -418,8 +470,10 @@ def render_table(df: pd.DataFrame) -> None:
 
     with st.container(border=True):
         header_col, close_col = st.columns([10, 1])
-        header_col.markdown(f"#### 📋 {country_name}")
-        if close_col.button("✖", key=f"close_detail_{page}", help="Fechar detalhes"):
+        header_col.markdown(f"#### :material/badge: {country_name}")
+        if close_col.button(
+            ":material/close:", key=f"close_detail_{page}", help="Fechar detalhes"
+        ):
             st.session_state["_closed_detail_for"] = (page, country_name)
             st.rerun()
         render_country_detail(detail)
@@ -427,7 +481,7 @@ def render_table(df: pd.DataFrame) -> None:
 
 def main() -> None:
     """Dashboard entry point."""
-    st.title("🌍 Dashboard de Países")
+    st.title(":material/public: Dashboard de Países")
 
     full_df = load_countries()
 
