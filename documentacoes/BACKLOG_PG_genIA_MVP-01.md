@@ -382,6 +382,23 @@
   - [x] Sem horizontal scroll em mobile (`scrollWidth == clientWidth` medido via Playwright; a tabela mantém apenas scroll interno próprio, comportamento esperado do componente)
   - [x] Paleta de cores documentada em `documentacoes/DESIGN_SYSTEM.md`
 
+#### US-022: Análise de Idiomas Globais ✅
+- **Prioridade:** 🟡 MÉDIO
+- **Status:** ✅ Concluído
+- **Story Points:** 3
+- **Assignee:** [Frontend Dev 2]
+- **Dependências:** US-017 (dados de idiomas)
+- **Descrição:** Gráficos interativos para análise de idiomas mais falados
+- **Critérios de Aceite:**
+  - [x] Top 10 idiomas por população falante (estimada - soma das populações dos países)
+  - [x] Top 10 idiomas por quantidade de países
+  - [x] 2 gráficos de barras lado a lado
+  - [x] Cores com gradiente sequencial (paleta verde)
+  - [x] Labels e valores visíveis
+  - [x] Nota explicativa sobre estimativa (sobrecontagem em multilíngues)
+  - [x] Renderização < 1s
+  - [x] Atualiza com filtro de região
+
 ---
 
 ### EPIC E-005: Testes & Qualidade
@@ -580,8 +597,8 @@ Este projeto (**Release 0.1**) foi concluído como parte do currículo de Pós-G
 | Métrica | Resultado |
 |---------|-----------|
 | **Status** | ✅ **CONCLUÍDO** (19/09/2026) |
-| **Total User Stories** | 31 |
-| **Story Points** | 98 |
+| **Total User Stories** | 25 |
+| **Story Points** | 101 |
 | **Timeline Planejado** | 27 dias |
 | **Timeline Real** | 19 dias (11 dias antecipado) |
 | **Taxa de Conclusão** | 100% |
@@ -590,14 +607,14 @@ Este projeto (**Release 0.1**) foi concluído como parte do currículo de Pós-G
 
 | Release | Total US | Story Points | Status | Data Conclusão |
 |---------|----------|--------------|--------|-----------------|
-| **0.1** | 31 | 98 | ✅ CONCLUÍDO | 19/09/2026 |
+| **0.1** | 25 | 101 | ✅ CONCLUÍDO | 19/09/2026 |
 
 ### Por Prioridade
 
 | Prioridade | Count | % |
 |-----------|-------|-----|
-| 🔴 CRÍTICO | 13 | 54% |
-| 🟠 ALTO | 9 | 38% |
+| 🔴 CRÍTICO | 13 | 52% |
+| 🟠 ALTO | 10 | 40% |
 | 🟡 MÉDIO | 2 | 8% |
 | 🟢 BAIXO | 0 | 0% |
 
@@ -607,7 +624,7 @@ Este projeto (**Release 0.1**) foi concluído como parte do currículo de Pós-G
 |------|-------|
 | Infrastructure/Setup | 3 |
 | Backend | 10 |
-| Frontend | 8 |
+| Frontend | 9 |
 | Testing/QA | 3 |
 
 ---

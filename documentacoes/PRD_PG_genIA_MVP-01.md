@@ -203,6 +203,16 @@ Desenvolvimento de MVP que consome dados da API REST Countries, persistindo info
   - Coordenadas Geográficas
 - **Implementação:** Card expansível ou modal ao clicar na linha
 
+#### RF-FE-006: Análise de Idiomas ✅
+- **Descrição:** Visualizar idiomas mais falados mundialmente
+- **Gráficos:**
+  - Top 10 idiomas por população falante (estimada)
+  - Top 10 idiomas por quantidade de países
+- **Critério de Aceição:**
+  - Gráficos renderizam em < 1s
+  - Estimativa clara (soma de população pode ter sobrecontagem em multilíngues)
+  - Cores consistentes com paleta geral
+
 ---
 
 ## 4. REQUISITOS NÃO-FUNCIONAIS
@@ -443,7 +453,7 @@ python-dateutil>=2.8.0    # Datetime utilities
 | **Testes Implementados** | - | **269+ testes** | ✅ |
 | **Endpoints REST** | Mínimo | **17 endpoints** | ✅ |
 | **Documentação OpenAPI** | 100% | **Swagger + ReDoc + Schema** | ✅ |
-| **Dashboard Components** | Mínimo | **KPIs + Filtros + Tabelas + Gráficos** | ✅ |
+| **Dashboard Components** | Mínimo | **KPIs + Filtros + Tabelas + Gráficos + Idiomas** | ✅ |
 | **Code Quality Tools** | Black, Flake8, mypy | **0 violations (--strict)** | ✅ |
 | **Sincronização Automática** | Diária | **APScheduler 00:00 UTC** | ✅ |
 

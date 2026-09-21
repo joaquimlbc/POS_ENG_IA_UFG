@@ -81,8 +81,8 @@ Componentes periféricos (ingestão externa e apresentação):
   - Job: executa `ingest_countries()` diariamente em 00:00 UTC.
   - Fallback: exceções logadas, não propagadas; próxima execução mantida.
   - Configurável via `ENABLE_SCHEDULER` (env var).
-- ✅ **Dashboard (Streamlit)** — implementado (US-014 a US-021).
-  - Componentes: KPIs (4 cards), filtro region, tabela paginada (7 colunas), gráficos (top 10 barras + distribuição pizza), detalhes expandidos.
+- ✅ **Dashboard (Streamlit)** — implementado (US-014 a US-022).
+  - Componentes: KPIs (4 cards), filtro region, tabela paginada (7 colunas), gráficos (top 10 barras + top 10 idiomas + distribuição pizza), detalhes expandidos.
   - Responsivo (mobile ≤ 768px).
   - Cache com `@st.cache_data` para performance.
 

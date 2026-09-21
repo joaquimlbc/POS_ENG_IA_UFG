@@ -289,6 +289,7 @@ curl -X POST http://localhost:8000/api/v1/sync
 **Visualizações**
 - **Top 10 por População** (gráfico de barras com cores degradadas)
 - **Top 10 por Área** (gráfico de barras em km²)
+- **Top 10 Idiomas** (por população falante + por quantidade de países)
 - **Distribuição Regional** (2 gráficos de pizza - população e quantidade)
 
 **Responsividade**
