@@ -1,5 +1,13 @@
 # FastAPI e Web Server
-fastapi==0.109.0
+# fastapi/starlette/anyio/httpx pinned together as a known-compatible set -
+# leaving any of these unpinned lets pip resolve a newer starlette/anyio pair
+# where starlette.testclient emits a DeprecationWarning (anyio.abc.BlockingPortal
+# alias, or later, httpx vs "httpx2") that pytest.ini's filterwarnings=error
+# turns into a hard collection failure (exit code 4) in CI.
+fastapi==0.115.6
+starlette==0.41.3
+anyio==4.6.2.post1
+httpx==0.27.2
 uvicorn[standard]==0.27.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
