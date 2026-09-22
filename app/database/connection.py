@@ -5,9 +5,11 @@ with support for SQLite (MVP) and PostgreSQL (production migration path).
 """
 
 import os
+from pathlib import Path
 from typing import Any, Generator
 
 from sqlalchemy import Engine, create_engine, event
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.utils.logger import get_logger
@@ -16,6 +18,14 @@ logger = get_logger(__name__)
 
 # Database URL from environment or default SQLite
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/countries.db")
+
+# SQLite can't create the database file if its parent directory is missing
+# (e.g. a fresh clone, where data/ isn't tracked in git) - create it upfront
+# rather than every caller needing to know about this.
+if DATABASE_URL.startswith("sqlite") and ":memory:" not in DATABASE_URL:
+    db_path = make_url(DATABASE_URL).database
+    if db_path:
+        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
 
 # Connection pool configuration
 POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "5"))
