@@ -1,4 +1,4 @@
-# PG genIA MVP-01: REST Countries API & Dashboard
+# Dashboard de Países com REST Countries API
 
 **Status:** 🟢 Production Ready (Release 0.1)  
 **Última Atualização:** 19/09/2026  
